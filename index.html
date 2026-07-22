@@ -78,6 +78,22 @@
                 border-top: 1px dashed #e2e8f0 !important;
             }
             .rtable td.rtable-actions::before { content: none; }
+
+            /* Baris header pengelompokan (nama sekolah) tampil sebagai
+               label section, bukan sebagai kartu terpisah, di layar HP */
+            .rtable tr.group-header {
+                background: transparent;
+                border: none;
+                border-radius: 0;
+                margin-bottom: 0.35rem;
+                padding: 0;
+                box-shadow: none;
+            }
+            .rtable tr.group-header td {
+                display: block;
+                text-align: left;
+                padding: 0.4rem 0.2rem !important;
+            }
         }
     </style>
 </head>
@@ -202,6 +218,16 @@
                     Siswa Belum Mengisi Konfirmasi</span>
                     <span id="badge-belum-mengisi" class="bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
                 </h3>
+
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">
+                        <i class="fa-solid fa-magnifying-glass mr-1"></i> Cari / Filter Sekolah
+                    </label>
+                    <select id="filter-sekolah-belum" onchange="renderBelumMengisi()" class="w-full sm:w-80 px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50/50 focus:ring-2 focus:ring-rose-400 focus:outline-none text-sm">
+                        <option value="">-- Semua Sekolah --</option>
+                    </select>
+                </div>
+
                 <div class="overflow-x-auto -mx-1 px-1">
                     <table class="rtable w-full text-left text-sm text-slate-600">
                         <thead class="bg-rose-50 text-rose-700 text-xs uppercase tracking-wider font-semibold">
@@ -344,7 +370,58 @@
     </main>
 
     <script>
-        // Cache lokal (disinkronkan dari Google Sheets lewat google.script.run)
+        // ===== GANTI DENGAN URL DEPLOYMENT WEB APP APPS SCRIPT ANDA =====
+        var API_URL = 'https://script.google.com/macros/s/AKfycbzdfGQQSuoauHUldE5lVYLHdXQSbyZ3bhPzvZXfgQFZMQjE5lWaO84iPfH6NFTAiHH_Vw/exec';
+
+        // Shim (tiruan) google.script.run supaya kode di bawah tidak perlu
+        // diubah. Di balik layar, ini memanggil Web App Apps Script lewat
+        // fetch(), bukan API asli google.script.run (yang hanya ada kalau
+        // halaman dibuka dari domain script.google.com).
+        (function () {
+            function callApi(fnName, args, successHandler, failureHandler) {
+                fetch(API_URL, {
+                    method: 'POST',
+                    // Pakai text/plain agar browser tidak mengirim CORS
+                    // preflight request (yang akan gagal di Apps Script).
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: fnName, args: args })
+                })
+                .then(function (res) { return res.json(); })
+                .then(function (data) {
+                    if (data && data.__error__) {
+                        if (failureHandler) failureHandler({ message: data.__error__ });
+                    } else {
+                        if (successHandler) successHandler(data);
+                    }
+                })
+                .catch(function (err) {
+                    if (failureHandler) failureHandler(err);
+                });
+            }
+
+            var successHandler = null;
+            var failureHandler = null;
+            var runProxy = {
+                withSuccessHandler: function (fn) { successHandler = fn; return runProxy; },
+                withFailureHandler: function (fn) { failureHandler = fn; return runProxy; }
+            };
+
+            ['getAllData', 'saveSekolahDanSiswa', 'updateSekolahInfo', 'updateSiswaData', 'hapusSekolah']
+                .forEach(function (fnName) {
+                    runProxy[fnName] = function () {
+                        var args = Array.prototype.slice.call(arguments);
+                        var sh = successHandler, fh = failureHandler;
+                        successHandler = null;
+                        failureHandler = null; // reset supaya chain berikutnya bersih
+                        callApi(fnName, args, sh, fh);
+                    };
+                });
+
+            window.google = window.google || {};
+            google.script = { run: runProxy };
+        })();
+
+        // Cache lokal (disinkronkan dari Google Sheets lewat backend Apps Script)
         var sekolahList = [];
         var siswaList = [];
 
@@ -477,7 +554,11 @@
             google.script.run
                 .withSuccessHandler(function (result) {
                     resetBtnLoading(btn);
-                    showToast('Berhasil menyimpan data sekolah dan ' + result.added + ' data siswa lulusan!', 'success');
+                    var pesan = result.isNewSekolah
+                        ? 'Berhasil menyimpan data sekolah dan ' + result.added + ' data siswa lulusan!'
+                        : 'Sekolah sudah terdaftar, data digabung ke sekolah yang sama! (+' + result.added + ' siswa baru' +
+                          (result.updated > 0 ? ', ' + result.updated + ' siswa diperbarui' : '') + ')';
+                    showToast(pesan, 'success');
                     document.getElementById('form-guru').reset();
                     refreshData(renderRekapGuru);
                 })
@@ -516,23 +597,56 @@
                 });
             }
 
+            populateFilterSekolahBelum();
             renderBelumMengisi();
+        }
+
+        // Mengisi dropdown filter sekolah pada kartu "Belum Mengisi Konfirmasi".
+        // Menggunakan buildSekolahGroups() yang sama dengan dropdown Akun Murid,
+        // supaya sekolah dengan nama sama tetap digabung jadi satu opsi.
+        // Pilihan yang sedang aktif dipertahankan saat data di-refresh.
+        function populateFilterSekolahBelum() {
+            var select = document.getElementById('filter-sekolah-belum');
+            var currentValue = select.value;
+
+            select.innerHTML = '<option value="">-- Semua Sekolah --</option>';
+            var groups = buildSekolahGroups();
+            groups.forEach(function (g) {
+                var opt = document.createElement('option');
+                opt.value = g.ids.join(',');
+                opt.textContent = g.namaSekolah + ' (NPSN: ' + g.npsn + ')';
+                select.appendChild(opt);
+            });
+
+            var masihAda = [].slice.call(select.options).some(function (o) { return o.value === currentValue; });
+            if (masihAda) select.value = currentValue;
         }
 
         // Menampilkan daftar siswa yang kolom "Melanjutkan"-nya masih kosong,
         // artinya siswa tersebut belum pernah mengisi form konfirmasi kelanjutan.
+        // Jika dropdown "Filter Sekolah" kosong (belum dipilih), badge & daftar
+        // menghitung SEMUA sekolah. Jika sebuah sekolah dipilih, badge & daftar
+        // hanya menghitung siswa dari sekolah yang dipilih itu saja.
         function renderBelumMengisi() {
             var tbody = document.getElementById('table-belum-mengisi');
             var badge = document.getElementById('badge-belum-mengisi');
+            var filterValue = document.getElementById('filter-sekolah-belum').value;
+            var filterIds = filterValue ? filterValue.split(',') : null;
 
             var belum = siswaList.filter(function (s) {
-                return !s.melanjutkan || String(s.melanjutkan).trim() === '';
+                var belumIsi = !s.melanjutkan || String(s.melanjutkan).trim() === '';
+                if (!belumIsi) return false;
+                if (filterIds && filterIds.indexOf(s.sekolahId) === -1) return false;
+                return true;
             });
 
             badge.textContent = belum.length;
 
             if (belum.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">🎉 Semua siswa sudah mengisi konfirmasi kelanjutan.</td></tr>';
+                var pesanKosong = filterIds
+                    ? 'Semua siswa di sekolah ini sudah mengisi konfirmasi kelanjutan.'
+                    : '🎉 Semua siswa sudah mengisi konfirmasi kelanjutan.';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">' + pesanKosong + '</td></tr>';
                 return;
             }
 
