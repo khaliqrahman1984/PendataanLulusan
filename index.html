@@ -2,12 +2,13 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
     <title>Aplikasi Pendataan Kelulusan & Sekolah Lanjutan</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <style>
+        html, body { overflow-x: hidden; }
         body { font-family: 'Inter', sans-serif; }
         .btn-loading { opacity: 0.85; pointer-events: none; }
 
@@ -37,32 +38,73 @@
             0%, 60%, 100% { opacity: 0.4; transform: translateY(0); }
             30% { opacity: 1; transform: translateY(-3px); }
         }
+
+        /* ===== Responsive table -> card di layar HP ===== */
+        @media (max-width: 767px) {
+            .rtable, .rtable tbody, .rtable tr, .rtable td { display: block; width: 100%; }
+            .rtable thead { display: none; }
+            .rtable tr {
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.9rem;
+                margin-bottom: 0.75rem;
+                padding: 0.5rem 0.75rem;
+            }
+            .rtable tr:last-child { margin-bottom: 0; }
+            .rtable td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.45rem 0.1rem !important;
+                border: none !important;
+                text-align: right;
+            }
+            .rtable td[data-label]::before {
+                content: attr(data-label);
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: #94a3b8;
+                text-transform: uppercase;
+                letter-spacing: 0.03em;
+                text-align: left;
+                flex-shrink: 0;
+            }
+            .rtable td.rtable-actions {
+                justify-content: flex-end;
+                flex-wrap: wrap;
+                padding-top: 0.6rem !important;
+                margin-top: 0.3rem;
+                border-top: 1px dashed #e2e8f0 !important;
+            }
+            .rtable td.rtable-actions::before { content: none; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <header class="bg-indigo-600 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
-            <div class="flex items-center space-x-3 mb-2 sm:mb-0">
-                <div class="bg-white text-indigo-600 p-2 rounded-xl shadow-inner font-bold text-xl">
+    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-20">
+        <div class="max-w-7xl mx-auto px-3 py-3 sm:px-4 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white text-indigo-600 p-2 rounded-xl shadow-inner font-bold text-lg sm:text-xl shrink-0">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold">Sistem Pendataan Kelulusan</h1>
-                    <p class="text-xs text-indigo-200">Manajemen Data Lulusan & Sekolah Tujuan Siswa</p>
+                <div class="min-w-0">
+                    <h1 class="text-base sm:text-xl font-bold leading-tight truncate">Sistem Pendataan Kelulusan</h1>
+                    <p class="text-[11px] sm:text-xs text-indigo-200 leading-tight truncate">Manajemen Data Lulusan & Sekolah Tujuan Siswa</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-2">
-                <div class="flex bg-indigo-700 p-1 rounded-xl shadow-inner border border-indigo-500">
-                    <button onclick="switchTab('guru')" id="tab-guru" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow">
-                        <i class="fa-solid fa-chalkboard-user mr-2"></i> Akun Guru / Operator
+            <div class="flex items-center gap-2">
+                <div class="flex flex-1 sm:flex-none bg-indigo-700 p-1 rounded-xl shadow-inner border border-indigo-500">
+                    <button onclick="switchTab('guru')" id="tab-guru" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-indigo-700 shadow whitespace-nowrap">
+                        <i class="fa-solid fa-chalkboard-user sm:mr-2"></i><span class="hidden xs:inline sm:inline"> Guru/Operator</span>
                     </button>
-                    <button onclick="switchTab('murid')" id="tab-murid" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-indigo-100 hover:text-white">
-                        <i class="fa-solid fa-user-graduate mr-2"></i> Akun Murid / Siswa
+                    <button onclick="switchTab('murid')" id="tab-murid" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-indigo-100 hover:text-white whitespace-nowrap">
+                        <i class="fa-solid fa-user-graduate sm:mr-2"></i><span class="hidden xs:inline sm:inline"> Murid/Siswa</span>
                     </button>
                 </div>
                 <!-- Tombol download Excel: hanya muncul di Akun Murid setelah sekolah dipilih -->
-                <div id="wrapper-download-excel" class="hidden">
+                <div id="wrapper-download-excel" class="hidden shrink-0">
                     <button onclick="downloadExcelSekolah()" title="Download Rekap Excel Sekolah Ini" class="w-10 h-10 flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-inner border border-emerald-400 transition">
                         <i class="fa-solid fa-file-excel text-lg"></i>
                     </button>
@@ -71,59 +113,59 @@
         </div>
     </header>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 py-4 sm:px-4 sm:py-6">
 
         <!-- Notification Toast -->
-        <div id="toast" class="hidden mb-6 p-4 rounded-xl border flex items-center space-x-3 transition-all duration-300">
-            <i id="toast-icon" class="fa-solid text-lg"></i>
+        <div id="toast" class="hidden mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border flex items-center space-x-3 transition-all duration-300">
+            <i id="toast-icon" class="fa-solid text-lg shrink-0"></i>
             <div id="toast-message" class="text-sm font-medium"></div>
         </div>
 
         <!-- ==================== GURU SECTION ==================== -->
-        <section id="section-guru" class="space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+        <section id="section-guru" class="space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
                 <div class="border-b border-slate-100 pb-4 mb-6">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center">
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center">
                         <i class="fa-solid fa-school text-indigo-600 mr-2"></i> Form Input Data Lulusan (Bulk Data)
                     </h2>
-                    <p class="text-sm text-slate-500">Operator sekolah dapat memasukkan data asal sekolah beserta daftar siswa lulusan sekaligus. Data kelanjutan sekolah (melanjutkan/jenjang/status/jalur) akan diisi oleh siswa masing-masing lewat Akun Murid.</p>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Operator sekolah dapat memasukkan data asal sekolah beserta daftar siswa lulusan sekaligus. Data kelanjutan sekolah (melanjutkan/jenjang/status/jalur) akan diisi oleh siswa masing-masing lewat Akun Murid.</p>
                 </div>
 
-                <form id="form-guru" onsubmit="handleGuruSubmit(event)" class="space-y-6">
+                <form id="form-guru" onsubmit="handleGuruSubmit(event)" class="space-y-5 sm:space-y-6">
                     <input type="hidden" id="guru-edit-id" value="">
 
-                    <div id="banner-edit-mode" class="hidden bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+                    <div id="banner-edit-mode" class="hidden bg-amber-50 border border-amber-200 text-amber-800 text-xs sm:text-sm px-3 sm:px-4 py-3 rounded-xl flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
                         <span><i class="fa-solid fa-pen-to-square mr-2"></i> Mode Edit: mengubah data sekolah yang sudah ada.</span>
-                        <button type="button" onclick="cancelEditSekolah()" class="text-xs font-semibold underline hover:no-underline">Batal Edit</button>
+                        <button type="button" onclick="cancelEditSekolah()" class="text-xs font-semibold underline hover:no-underline self-start sm:self-auto">Batal Edit</button>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Sekolah Asal *</label>
                             <input type="text" id="guru-namasekolah" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: SDN Alalak Tengah 4 Banjarmasin">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">NPSN Sekolah Asal *</label>
-                            <input type="text" id="guru-npsn" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: 30304503">
+                            <input type="text" id="guru-npsn" required inputmode="numeric" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: 30304503">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Tahun Lulus *</label>
-                            <input type="number" id="guru-tahun" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" value="2026">
+                            <input type="number" id="guru-tahun" required inputmode="numeric" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" value="2026">
                         </div>
                     </div>
 
                     <div>
-                        <div class="flex justify-between items-center mb-2">
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1.5 mb-2">
                             <label id="label-guru-bulk" class="text-sm font-semibold text-slate-700">Daftar Lulusan (Format: No;;Nama Lulusan;;NISN per baris) *</label>
-                            <span class="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">Contoh: 1;;Khaliq Rahman;;0081234567</span>
+                            <span class="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md self-start sm:self-auto">Contoh: 1;;Khaliq Rahman;;0081234567</span>
                         </div>
                         <textarea id="guru-bulk" rows="6" required class="w-full font-mono text-xs px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="1;;Khaliq Rahman;;0081234561&#10;2;;Ahmad Faris Addien;;0081234562&#10;3;;Ratmawati;;0081234563"></textarea>
                         <p id="hint-guru-bulk" class="hidden text-xs text-amber-600 mt-1">Mode edit: daftar siswa yang sudah ada otomatis ditampilkan di sini. NISN yang <strong>sama</strong> akan diperbarui (No &amp; Nama), NISN <strong>baru</strong> akan ditambahkan sebagai siswa baru. Data kelanjutan sekolah (melanjutkan/jenjang/dll) yang sudah diisi siswa tidak akan berubah.</p>
                     </div>
 
-                    <div class="flex justify-end space-x-3 pt-2">
+                    <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
                         <button type="reset" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition">Reset</button>
-                        <button type="submit" id="btn-submit-guru" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center">
+                        <button type="submit" id="btn-submit-guru" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center justify-center">
                             <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Simpan Data Lulusan
                         </button>
                     </div>
@@ -131,12 +173,12 @@
             </div>
 
             <!-- Dashboard Data Overview for Teachers -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                <h3 class="text-md font-bold text-slate-900 mb-4 flex items-center">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
+                <h3 class="text-sm sm:text-md font-bold text-slate-900 mb-4 flex items-center">
                     <i class="fa-solid fa-database text-indigo-600 mr-2"></i> Rekapitulasi Data Sekolah Terdaftar
                 </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600">
+                <div class="overflow-x-auto -mx-1 px-1">
+                    <table class="rtable w-full text-left text-sm text-slate-600">
                         <thead class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-semibold">
                             <tr>
                                 <th class="p-3 rounded-l-lg">Sekolah Asal</th>
@@ -154,14 +196,14 @@
             </div>
 
             <!-- Dashboard Siswa Belum Mengisi Konfirmasi (Tema Merah) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-rose-200 p-6 sm:p-8">
-                <h3 class="text-md font-bold text-rose-700 mb-4 flex items-center">
-                    <i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>
-                    Siswa yang Belum Mengisi Konfirmasi Kelanjutan
-                    <span id="badge-belum-mengisi" class="ml-2 bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
+            <div class="bg-white rounded-2xl shadow-sm border border-rose-200 p-4 sm:p-8">
+                <h3 class="text-sm sm:text-md font-bold text-rose-700 mb-4 flex items-center flex-wrap gap-2">
+                    <span class="flex items-center"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>
+                    Siswa Belum Mengisi Konfirmasi</span>
+                    <span id="badge-belum-mengisi" class="bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
                 </h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-slate-600">
+                <div class="overflow-x-auto -mx-1 px-1">
+                    <table class="rtable w-full text-left text-sm text-slate-600">
                         <thead class="bg-rose-50 text-rose-700 text-xs uppercase tracking-wider font-semibold">
                             <tr>
                                 <th class="p-3 rounded-l-lg">No</th>
@@ -179,17 +221,17 @@
         </section>
 
         <!-- ==================== MURID SECTION ==================== -->
-        <section id="section-murid" class="hidden space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+        <section id="section-murid" class="hidden space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
                 <div class="border-b border-slate-100 pb-4 mb-6">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center">
-                        <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-2"></i> Pencarian & Formulir Konfirmasi Kelanjutan Sekolah
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-2"></i> Pencarian & Konfirmasi Kelanjutan
                     </h2>
-                    <p class="text-sm text-slate-500">Pilih asal sekolah dan cari nama siswa Anda untuk mengisi data kelanjutan pendidikan.</p>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Pilih asal sekolah dan cari nama siswa Anda untuk mengisi data kelanjutan pendidikan.</p>
                 </div>
 
                 <!-- Step 1: Search Form -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 bg-indigo-50/50 p-4 sm:p-6 rounded-2xl border border-indigo-100 mb-6">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">1. Pilih Nama Sekolah Asal</label>
                         <select id="murid-select-sekolah" onchange="loadSiswaList()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
@@ -205,16 +247,16 @@
                 </div>
 
                 <!-- Step 2: Confirmation Form (Hidden until student selected) -->
-                <form id="form-murid" onsubmit="handleMuridSubmit(event)" class="space-y-6 hidden">
+                <form id="form-murid" onsubmit="handleMuridSubmit(event)" class="space-y-5 sm:space-y-6 hidden">
                     <input type="hidden" id="m-id">
 
-                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center text-sm gap-2">
+                    <div class="p-3 sm:p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:flex-wrap justify-between sm:items-center text-sm gap-1.5 sm:gap-2">
                         <div><span class="text-slate-500">Nama Siswa:</span> <strong id="lbl-nama" class="text-slate-800"></strong></div>
                         <div><span class="text-slate-500">NISN:</span> <strong id="lbl-nisn" class="text-slate-800"></strong></div>
                         <div><span class="text-slate-500">Asal Sekolah:</span> <strong id="lbl-sekolahasal" class="text-slate-800"></strong></div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 gap-4 sm:gap-6">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Melanjutkan Sekolah? *</label>
                             <select id="m-melanjutkan" onchange="toggleMelanjutkan()" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
@@ -226,8 +268,8 @@
                     </div>
 
                     <!-- Container jika Melanjutkan -->
-                    <div id="container-melanjutkan" class="space-y-6 hidden">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div id="container-melanjutkan" class="space-y-5 sm:space-y-6 hidden">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Jenjang Tujuan *</label>
                                 <select id="m-jenjang" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
@@ -259,12 +301,12 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Sekolah Tujuan *</label>
-                                <div class="flex space-x-2">
+                                <div class="flex flex-col xs:flex-row sm:flex-row gap-2">
                                     <input type="text" id="m-sekolahtujuan" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: SMPN 1 Banjarmasin">
-                                    <button type="button" onclick="searchGoogleNPSN()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition flex items-center shrink-0">
+                                    <button type="button" onclick="searchGoogleNPSN()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center shrink-0">
                                         <i class="fa-brands fa-google mr-1.5"></i> Cari NPSN
                                     </button>
                                 </div>
@@ -272,13 +314,13 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-slate-700 mb-2">NPSN Sekolah Tujuan *</label>
-                                <input type="text" id="m-npsntujuan" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: 3030xxxx">
+                                <input type="text" id="m-npsntujuan" inputmode="numeric" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: 3030xxxx">
                             </div>
                         </div>
                     </div>
 
                     <!-- Container jika TIDAK Melanjutkan -->
-                    <div id="container-tidak" class="space-y-6 hidden">
+                    <div id="container-tidak" class="space-y-5 sm:space-y-6 hidden">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Alasan Tidak Melanjutkan *</label>
                             <textarea id="m-alasan" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Tuliskan alasan lengkap..."></textarea>
@@ -291,7 +333,7 @@
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button type="submit" id="btn-submit-murid" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center">
+                        <button type="submit" id="btn-submit-murid" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center justify-center">
                             <i class="fa-solid fa-paper-plane mr-2"></i> Kirim Konfirmasi Data
                         </button>
                     </div>
@@ -318,10 +360,11 @@
             var icon = document.getElementById('toast-icon');
             var text = document.getElementById('toast-message');
 
-            toast.className = 'mb-6 p-4 rounded-xl border flex items-center space-x-3 transition-all duration-300 ' + (type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800');
-            icon.className = 'fa-solid ' + (type === 'success' ? 'fa-circle-check text-emerald-600' : 'fa-circle-exclamation text-rose-600');
+            toast.className = 'mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border flex items-center space-x-3 transition-all duration-300 ' + (type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800');
+            icon.className = 'fa-solid text-lg shrink-0 ' + (type === 'success' ? 'fa-circle-check text-emerald-600' : 'fa-circle-exclamation text-rose-600');
             text.textContent = message;
             toast.classList.remove('hidden');
+            toast.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
             setTimeout(function () {
                 toast.classList.add('hidden');
@@ -367,20 +410,24 @@
             var secMurid = document.getElementById('section-murid');
             var wrapperDownload = document.getElementById('wrapper-download-excel');
 
+            var activeCls = 'flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-white text-indigo-700 shadow whitespace-nowrap';
+            var inactiveCls = 'flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-indigo-100 hover:text-white whitespace-nowrap';
+
             if (role === 'guru') {
-                tabGuru.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow';
-                tabMurid.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-indigo-100 hover:text-white';
+                tabGuru.className = activeCls;
+                tabMurid.className = inactiveCls;
                 secGuru.classList.remove('hidden');
                 secMurid.classList.add('hidden');
                 wrapperDownload.classList.add('hidden'); // tombol excel hanya untuk Akun Murid
                 refreshData(renderRekapGuru);
             } else {
-                tabMurid.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow';
-                tabGuru.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-indigo-100 hover:text-white';
+                tabMurid.className = activeCls;
+                tabGuru.className = inactiveCls;
                 secMurid.classList.remove('hidden');
                 secGuru.classList.add('hidden');
                 refreshData(populateDropdownSekolah);
             }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // ==================== GURU HANDLERS ====================
@@ -453,11 +500,11 @@
                     var tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50 transition';
                     tr.innerHTML =
-                        '<td class="p-3 font-semibold text-slate-800">' + s.namaSekolah + '</td>' +
-                        '<td class="p-3">' + s.npsn + '</td>' +
-                        '<td class="p-3">' + s.tahun + '</td>' +
-                        '<td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-bold">' + countSiswa + ' Siswa</span></td>' +
-                        '<td class="p-3 text-center space-x-1">' +
+                        '<td data-label="Sekolah Asal" class="p-3 font-semibold text-slate-800">' + s.namaSekolah + '</td>' +
+                        '<td data-label="NPSN" class="p-3">' + s.npsn + '</td>' +
+                        '<td data-label="Tahun" class="p-3">' + s.tahun + '</td>' +
+                        '<td data-label="Jumlah Siswa" class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-bold">' + countSiswa + ' Siswa</span></td>' +
+                        '<td class="p-3 text-center rtable-actions space-x-1">' +
                             '<button onclick="editSekolah(\'' + s.id + '\')" class="text-indigo-500 hover:text-indigo-700 text-xs font-semibold p-1.5 rounded-lg hover:bg-indigo-50 transition" title="Edit Data">' +
                                 '<i class="fa-solid fa-pen-to-square"></i> Edit' +
                             '</button>' +
@@ -495,10 +542,10 @@
                 var tr = document.createElement('tr');
                 tr.className = 'hover:bg-rose-50 transition';
                 tr.innerHTML =
-                    '<td class="p-3">' + s.no + '</td>' +
-                    '<td class="p-3 font-semibold text-slate-800">' + s.nama + '</td>' +
-                    '<td class="p-3">' + s.nisn + '</td>' +
-                    '<td class="p-3">' + (sekolah ? sekolah.namaSekolah : '-') + '</td>';
+                    '<td data-label="No" class="p-3">' + s.no + '</td>' +
+                    '<td data-label="Nama Siswa" class="p-3 font-semibold text-slate-800">' + s.nama + '</td>' +
+                    '<td data-label="NISN" class="p-3">' + s.nisn + '</td>' +
+                    '<td data-label="Asal Sekolah" class="p-3">' + (sekolah ? sekolah.namaSekolah : '-') + '</td>';
                 tbody.appendChild(tr);
             });
         }
@@ -752,6 +799,7 @@
 
                 toggleMelanjutkan();
                 formMurid.classList.remove('hidden');
+                formMurid.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
 
