@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Pendataan Kelulusan & Sekolah Lanjutan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .btn-loading { opacity: 0.85; pointer-events: none; }
+
+        /* Spinner lucu: topi wisuda muter-muter */
+        .fun-spinner {
+            display: inline-block;
+            animation: fun-spin-bounce 0.9s ease-in-out infinite;
+        }
+        @keyframes fun-spin-bounce {
+            0%   { transform: rotate(0deg) scale(1); }
+            25%  { transform: rotate(20deg) scale(1.15); }
+            50%  { transform: rotate(0deg) scale(1); }
+            75%  { transform: rotate(-20deg) scale(1.15); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        /* Titik-titik loncat "..." */
+        .fun-dots span {
+            display: inline-block;
+            animation: fun-dot-bounce 1.2s infinite;
+            opacity: 0.4;
+        }
+        .fun-dots span:nth-child(1) { animation-delay: 0s; }
+        .fun-dots span:nth-child(2) { animation-delay: 0.15s; }
+        .fun-dots span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes fun-dot-bounce {
+            0%, 60%, 100% { opacity: 0.4; transform: translateY(0); }
+            30% { opacity: 1; transform: translateY(-3px); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3 mb-2 sm:mb-0">
+                <div class="bg-white text-indigo-600 p-2 rounded-xl shadow-inner font-bold text-xl">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold">Sistem Pendataan Kelulusan</h1>
+                    <p class="text-xs text-indigo-200">Manajemen Data Lulusan & Sekolah Tujuan Siswa</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="flex bg-indigo-700 p-1 rounded-xl shadow-inner border border-indigo-500">
+                    <button onclick="switchTab('guru')" id="tab-guru" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow">
+                        <i class="fa-solid fa-chalkboard-user mr-2"></i> Akun Guru / Operator
+                    </button>
+                    <button onclick="switchTab('murid')" id="tab-murid" class="px-4 py-2 rounded-lg text-sm font-semibold transition-all text-indigo-100 hover:text-white">
+                        <i class="fa-solid fa-user-graduate mr-2"></i> Akun Murid / Siswa
+                    </button>
+                </div>
+                <!-- Tombol download Excel: hanya muncul di Akun Murid setelah sekolah dipilih -->
+                <div id="wrapper-download-excel" class="hidden">
+                    <button onclick="downloadExcelSekolah()" title="Download Rekap Excel Sekolah Ini" class="w-10 h-10 flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-inner border border-emerald-400 transition">
+                        <i class="fa-solid fa-file-excel text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6">
+
+        <!-- Notification Toast -->
+        <div id="toast" class="hidden mb-6 p-4 rounded-xl border flex items-center space-x-3 transition-all duration-300">
+            <i id="toast-icon" class="fa-solid text-lg"></i>
+            <div id="toast-message" class="text-sm font-medium"></div>
+        </div>
+
+        <!-- ==================== GURU SECTION ==================== -->
+        <section id="section-guru" class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-school text-indigo-600 mr-2"></i> Form Input Data Lulusan (Bulk Data)
+                    </h2>
+                    <p class="text-sm text-slate-500">Operator sekolah dapat memasukkan data asal sekolah beserta daftar siswa lulusan sekaligus. Data kelanjutan sekolah (melanjutkan/jenjang/status/jalur) akan diisi oleh siswa masing-masing lewat Akun Murid.</p>
+                </div>
+
+                <form id="form-guru" onsubmit="handleGuruSubmit(event)" class="space-y-6">
+                    <input type="hidden" id="guru-edit-id" value="">
+
+                    <div id="banner-edit-mode" class="hidden bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+                        <span><i class="fa-solid fa-pen-to-square mr-2"></i> Mode Edit: mengubah data sekolah yang sudah ada.</span>
+                        <button type="button" onclick="cancelEditSekolah()" class="text-xs font-semibold underline hover:no-underline">Batal Edit</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Sekolah Asal *</label>
+                            <input type="text" id="guru-namasekolah" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: SDN Alalak Tengah 4 Banjarmasin">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">NPSN Sekolah Asal *</label>
+                            <input type="text" id="guru-npsn" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: 30304503">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Tahun Lulus *</label>
+                            <input type="number" id="guru-tahun" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" value="2026">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label id="label-guru-bulk" class="text-sm font-semibold text-slate-700">Daftar Lulusan (Format: No;;Nama Lulusan;;NISN per baris) *</label>
+                            <span class="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">Contoh: 1;;Khaliq Rahman;;0081234567</span>
+                        </div>
+                        <textarea id="guru-bulk" rows="6" required class="w-full font-mono text-xs px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="1;;Khaliq Rahman;;0081234561&#10;2;;Ahmad Faris Addien;;0081234562&#10;3;;Ratmawati;;0081234563"></textarea>
+                        <p id="hint-guru-bulk" class="hidden text-xs text-amber-600 mt-1">Mode edit: daftar siswa yang sudah ada otomatis ditampilkan di sini. NISN yang <strong>sama</strong> akan diperbarui (No &amp; Nama), NISN <strong>baru</strong> akan ditambahkan sebagai siswa baru. Data kelanjutan sekolah (melanjutkan/jenjang/dll) yang sudah diisi siswa tidak akan berubah.</p>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="reset" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition">Reset</button>
+                        <button type="submit" id="btn-submit-guru" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center">
+                            <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Simpan Data Lulusan
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Dashboard Data Overview for Teachers -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <h3 class="text-md font-bold text-slate-900 mb-4 flex items-center">
+                    <i class="fa-solid fa-database text-indigo-600 mr-2"></i> Rekapitulasi Data Sekolah Terdaftar
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-100 text-slate-700 text-xs uppercase tracking-wider font-semibold">
+                            <tr>
+                                <th class="p-3 rounded-l-lg">Sekolah Asal</th>
+                                <th class="p-3">NPSN</th>
+                                <th class="p-3">Tahun</th>
+                                <th class="p-3">Jumlah Siswa</th>
+                                <th class="p-3 rounded-r-lg text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-rekap-guru" class="divide-y divide-slate-100">
+                            <tr><td colspan="5" class="text-center py-6 text-slate-400">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Dashboard Siswa Belum Mengisi Konfirmasi (Tema Merah) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-rose-200 p-6 sm:p-8">
+                <h3 class="text-md font-bold text-rose-700 mb-4 flex items-center">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>
+                    Siswa yang Belum Mengisi Konfirmasi Kelanjutan
+                    <span id="badge-belum-mengisi" class="ml-2 bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-rose-50 text-rose-700 text-xs uppercase tracking-wider font-semibold">
+                            <tr>
+                                <th class="p-3 rounded-l-lg">No</th>
+                                <th class="p-3">Nama Siswa</th>
+                                <th class="p-3">NISN</th>
+                                <th class="p-3 rounded-r-lg">Asal Sekolah</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-belum-mengisi" class="divide-y divide-rose-100">
+                            <tr><td colspan="4" class="text-center py-6 text-slate-400">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== MURID SECTION ==================== -->
+        <section id="section-murid" class="hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <div class="border-b border-slate-100 pb-4 mb-6">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center">
+                        <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-2"></i> Pencarian & Formulir Konfirmasi Kelanjutan Sekolah
+                    </h2>
+                    <p class="text-sm text-slate-500">Pilih asal sekolah dan cari nama siswa Anda untuk mengisi data kelanjutan pendidikan.</p>
+                </div>
+
+                <!-- Step 1: Search Form -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-indigo-50/50 p-6 rounded-2xl border border-indigo-100 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">1. Pilih Nama Sekolah Asal</label>
+                        <select id="murid-select-sekolah" onchange="loadSiswaList()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                            <option value="">-- Pilih Asal Sekolah --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">2. Pilih Nama Siswa</label>
+                        <select id="murid-select-siswa" onchange="selectSiswaData()" disabled class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm disabled:bg-slate-100 disabled:text-slate-400">
+                            <option value="">-- Pilih Nama Anda --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Step 2: Confirmation Form (Hidden until student selected) -->
+                <form id="form-murid" onsubmit="handleMuridSubmit(event)" class="space-y-6 hidden">
+                    <input type="hidden" id="m-id">
+
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap justify-between items-center text-sm gap-2">
+                        <div><span class="text-slate-500">Nama Siswa:</span> <strong id="lbl-nama" class="text-slate-800"></strong></div>
+                        <div><span class="text-slate-500">NISN:</span> <strong id="lbl-nisn" class="text-slate-800"></strong></div>
+                        <div><span class="text-slate-500">Asal Sekolah:</span> <strong id="lbl-sekolahasal" class="text-slate-800"></strong></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Melanjutkan Sekolah? *</label>
+                            <select id="m-melanjutkan" onchange="toggleMelanjutkan()" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                                <option value="" disabled>-- Pilih Salah Satu --</option>
+                                <option value="Melanjutkan">Melanjutkan</option>
+                                <option value="Tidak Melanjutkan">Tidak Melanjutkan</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Container jika Melanjutkan -->
+                    <div id="container-melanjutkan" class="space-y-6 hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Jenjang Tujuan *</label>
+                                <select id="m-jenjang" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                                    <option value="" disabled>-- Pilih Jenjang --</option>
+                                    <option value="SMP">SMP</option>
+                                    <option value="MTs">MTs</option>
+                                    <option value="Pesantren">Pesantren</option>
+                                    <option value="SMA">SMA</option>
+                                    <option value="SMK">SMK</option>
+                                    <option value="MA">MA</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Status Sekolah Tujuan *</label>
+                                <select id="m-status" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                                    <option value="" disabled>-- Pilih Status --</option>
+                                    <option value="Negeri">Negeri</option>
+                                    <option value="Swasta">Swasta</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Jalur Masuk *</label>
+                                <select id="m-jalur" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                                    <option value="" disabled>-- Pilih Jalur --</option>
+                                    <option value="Domisili">Domisili</option>
+                                    <option value="Afirmasi">Afirmasi</option>
+                                    <option value="Mutasi">Mutasi</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Nama Sekolah Tujuan *</label>
+                                <div class="flex space-x-2">
+                                    <input type="text" id="m-sekolahtujuan" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: SMPN 1 Banjarmasin">
+                                    <button type="button" onclick="searchGoogleNPSN()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-bold transition flex items-center shrink-0">
+                                        <i class="fa-brands fa-google mr-1.5"></i> Cari NPSN
+                                    </button>
+                                </div>
+                                <p class="text-xs text-slate-400 mt-1">Klik tombol Google untuk membantu mencari NPSN sekolah tujuan.</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">NPSN Sekolah Tujuan *</label>
+                                <input type="text" id="m-npsntujuan" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Contoh: 3030xxxx">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Container jika TIDAK Melanjutkan -->
+                    <div id="container-tidak" class="space-y-6 hidden">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Alasan Tidak Melanjutkan *</label>
+                            <textarea id="m-alasan" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Tuliskan alasan lengkap..."></textarea>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Keterangan Tambahan</label>
+                        <input type="text" id="m-keterangan" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Catatan opsional...">
+                    </div>
+
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" id="btn-submit-murid" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center">
+                            <i class="fa-solid fa-paper-plane mr-2"></i> Kirim Konfirmasi Data
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Cache lokal (disinkronkan dari Google Sheets lewat google.script.run)
+        var sekolahList = [];
+        var siswaList = [];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            refreshData(function () {
+                renderRekapGuru();
+            });
+        });
+
+        function showToast(message, type) {
+            type = type || 'success';
+            var toast = document.getElementById('toast');
+            var icon = document.getElementById('toast-icon');
+            var text = document.getElementById('toast-message');
+
+            toast.className = 'mb-6 p-4 rounded-xl border flex items-center space-x-3 transition-all duration-300 ' + (type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800');
+            icon.className = 'fa-solid ' + (type === 'success' ? 'fa-circle-check text-emerald-600' : 'fa-circle-exclamation text-rose-600');
+            text.textContent = message;
+            toast.classList.remove('hidden');
+
+            setTimeout(function () {
+                toast.classList.add('hidden');
+            }, 4000);
+        }
+
+        function setBtnLoading(btn, loadingText) {
+            btn.dataset.originalHtml = btn.innerHTML;
+            btn.innerHTML =
+                '<i class="fa-solid fa-graduation-cap fun-spinner mr-2"></i>' +
+                loadingText +
+                '<span class="fun-dots ml-1">' +
+                    '<span>.</span><span>.</span><span>.</span>' +
+                '</span>';
+            btn.classList.add('btn-loading');
+        }
+
+        function resetBtnLoading(btn) {
+            if (btn.dataset.originalHtml) {
+                btn.innerHTML = btn.dataset.originalHtml;
+            }
+            btn.classList.remove('btn-loading');
+        }
+
+        // Ambil data terbaru dari Google Sheets
+        function refreshData(callback) {
+            google.script.run
+                .withSuccessHandler(function (data) {
+                    sekolahList = data.sekolah || [];
+                    siswaList = data.siswa || [];
+                    if (callback) callback();
+                })
+                .withFailureHandler(function (err) {
+                    showToast('Gagal memuat data: ' + err.message, 'error');
+                })
+                .getAllData();
+        }
+
+        function switchTab(role) {
+            var tabGuru = document.getElementById('tab-guru');
+            var tabMurid = document.getElementById('tab-murid');
+            var secGuru = document.getElementById('section-guru');
+            var secMurid = document.getElementById('section-murid');
+            var wrapperDownload = document.getElementById('wrapper-download-excel');
+
+            if (role === 'guru') {
+                tabGuru.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow';
+                tabMurid.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-indigo-100 hover:text-white';
+                secGuru.classList.remove('hidden');
+                secMurid.classList.add('hidden');
+                wrapperDownload.classList.add('hidden'); // tombol excel hanya untuk Akun Murid
+                refreshData(renderRekapGuru);
+            } else {
+                tabMurid.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-white text-indigo-700 shadow';
+                tabGuru.className = 'px-4 py-2 rounded-lg text-sm font-semibold transition-all text-indigo-100 hover:text-white';
+                secMurid.classList.remove('hidden');
+                secGuru.classList.add('hidden');
+                refreshData(populateDropdownSekolah);
+            }
+        }
+
+        // ==================== GURU HANDLERS ====================
+        function handleGuruSubmit(e) {
+            e.preventDefault();
+            var namaSekolah = document.getElementById('guru-namasekolah').value.trim();
+            var npsn = document.getElementById('guru-npsn').value.trim();
+            var tahun = document.getElementById('guru-tahun').value.trim();
+            var bulkText = document.getElementById('guru-bulk').value.trim();
+            var editId = document.getElementById('guru-edit-id').value;
+            var btn = document.getElementById('btn-submit-guru');
+
+            if (editId) {
+                var password = prompt('Masukkan password untuk menyimpan perubahan data sekolah:');
+                if (password === null) return; // dibatalkan
+                if (password === '') {
+                    showToast('Password wajib diisi.', 'error');
+                    return;
+                }
+
+                setBtnLoading(btn, 'Menyimpan...');
+
+                google.script.run
+                    .withSuccessHandler(function (result) {
+                        resetBtnLoading(btn);
+                        if (result.status === 'success') {
+                            var pesanTambahan = '';
+                            if (result.added > 0) pesanTambahan += ' (+' + result.added + ' siswa baru ditambahkan)';
+                            if (result.updated > 0) pesanTambahan += ' (' + result.updated + ' siswa diperbarui)';
+                            showToast('Berhasil memperbarui data sekolah!' + pesanTambahan, 'success');
+                            cancelEditSekolah();
+                            refreshData(renderRekapGuru);
+                        } else {
+                            showToast(result.message || 'Gagal memperbarui data.', 'error');
+                        }
+                    })
+                    .withFailureHandler(function (err) {
+                        resetBtnLoading(btn);
+                        showToast('Gagal memperbarui data: ' + err.message, 'error');
+                    })
+                    .updateSekolahInfo(editId, namaSekolah, npsn, tahun, bulkText, password);
+                return;
+            }
+
+            setBtnLoading(btn, 'Menyimpan...');
+
+            google.script.run
+                .withSuccessHandler(function (result) {
+                    resetBtnLoading(btn);
+                    showToast('Berhasil menyimpan data sekolah dan ' + result.added + ' data siswa lulusan!', 'success');
+                    document.getElementById('form-guru').reset();
+                    refreshData(renderRekapGuru);
+                })
+                .withFailureHandler(function (err) {
+                    resetBtnLoading(btn);
+                    showToast('Gagal menyimpan data: ' + err.message, 'error');
+                })
+                .saveSekolahDanSiswa(namaSekolah, npsn, tahun, bulkText);
+        }
+
+        function renderRekapGuru() {
+            var tbody = document.getElementById('table-rekap-guru');
+
+            if (sekolahList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada data sekolah tersimpan.</td></tr>';
+            } else {
+                tbody.innerHTML = '';
+                sekolahList.forEach(function (s) {
+                    var countSiswa = siswaList.filter(function (siswa) { return siswa.sekolahId === s.id; }).length;
+                    var tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50 transition';
+                    tr.innerHTML =
+                        '<td class="p-3 font-semibold text-slate-800">' + s.namaSekolah + '</td>' +
+                        '<td class="p-3">' + s.npsn + '</td>' +
+                        '<td class="p-3">' + s.tahun + '</td>' +
+                        '<td class="p-3"><span class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full text-xs font-bold">' + countSiswa + ' Siswa</span></td>' +
+                        '<td class="p-3 text-center space-x-1">' +
+                            '<button onclick="editSekolah(\'' + s.id + '\')" class="text-indigo-500 hover:text-indigo-700 text-xs font-semibold p-1.5 rounded-lg hover:bg-indigo-50 transition" title="Edit Data">' +
+                                '<i class="fa-solid fa-pen-to-square"></i> Edit' +
+                            '</button>' +
+                            '<button onclick="hapusSekolah(\'' + s.id + '\')" class="text-rose-500 hover:text-rose-700 text-xs font-semibold p-1.5 rounded-lg hover:bg-rose-50 transition" title="Hapus Data">' +
+                                '<i class="fa-solid fa-trash-can"></i> Hapus' +
+                            '</button>' +
+                        '</td>';
+                    tbody.appendChild(tr);
+                });
+            }
+
+            renderBelumMengisi();
+        }
+
+        // Menampilkan daftar siswa yang kolom "Melanjutkan"-nya masih kosong,
+        // artinya siswa tersebut belum pernah mengisi form konfirmasi kelanjutan.
+        function renderBelumMengisi() {
+            var tbody = document.getElementById('table-belum-mengisi');
+            var badge = document.getElementById('badge-belum-mengisi');
+
+            var belum = siswaList.filter(function (s) {
+                return !s.melanjutkan || String(s.melanjutkan).trim() === '';
+            });
+
+            badge.textContent = belum.length;
+
+            if (belum.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">🎉 Semua siswa sudah mengisi konfirmasi kelanjutan.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            belum.forEach(function (s) {
+                var sekolah = sekolahList.find(function (sk) { return sk.id === s.sekolahId; });
+                var tr = document.createElement('tr');
+                tr.className = 'hover:bg-rose-50 transition';
+                tr.innerHTML =
+                    '<td class="p-3">' + s.no + '</td>' +
+                    '<td class="p-3 font-semibold text-slate-800">' + s.nama + '</td>' +
+                    '<td class="p-3">' + s.nisn + '</td>' +
+                    '<td class="p-3">' + (sekolah ? sekolah.namaSekolah : '-') + '</td>';
+                tbody.appendChild(tr);
+            });
+        }
+
+        function editSekolah(id) {
+            var sekolah = sekolahList.find(function (s) { return s.id === id; });
+            if (!sekolah) return;
+
+            document.getElementById('guru-edit-id').value = sekolah.id;
+            document.getElementById('guru-namasekolah').value = sekolah.namaSekolah;
+            document.getElementById('guru-npsn').value = sekolah.npsn;
+            document.getElementById('guru-tahun').value = sekolah.tahun;
+
+            // Kembalikan data siswa yang sudah ada ke format bulk (No;;Nama;;NISN)
+            // supaya bisa dilihat & diedit ulang oleh operator.
+            var siswaSekolahIni = siswaList
+                .filter(function (s) { return s.sekolahId === sekolah.id; })
+                .sort(function (a, b) { return Number(a.no) - Number(b.no); });
+
+            var bulkLines = siswaSekolahIni.map(function (s) {
+                return s.no + ';;' + s.nama + ';;' + s.nisn;
+            });
+
+            document.getElementById('guru-bulk').value = bulkLines.join('\n');
+            document.getElementById('guru-bulk').required = false;
+
+            document.getElementById('banner-edit-mode').classList.remove('hidden');
+            document.getElementById('hint-guru-bulk').classList.remove('hidden');
+            document.getElementById('label-guru-bulk').textContent = 'Daftar Lulusan (edit di sini, format: No;;Nama Lulusan;;NISN per baris)';
+
+            var btn = document.getElementById('btn-submit-guru');
+            btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> Simpan Perubahan';
+
+            document.getElementById('form-guru').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function cancelEditSekolah() {
+            document.getElementById('form-guru').reset();
+            document.getElementById('guru-edit-id').value = '';
+            document.getElementById('guru-bulk').required = true;
+
+            document.getElementById('banner-edit-mode').classList.add('hidden');
+            document.getElementById('hint-guru-bulk').classList.add('hidden');
+            document.getElementById('label-guru-bulk').textContent = 'Daftar Lulusan (Format: No;;Nama Lulusan;;NISN per baris) *';
+
+            var btn = document.getElementById('btn-submit-guru');
+            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-2"></i> Simpan Data Lulusan';
+        }
+
+        function hapusSekolah(id) {
+            var password = prompt('Masukkan password untuk menghapus data sekolah dan seluruh siswa di dalamnya:');
+            if (password === null) return; // dibatalkan
+            if (password === '') {
+                showToast('Password wajib diisi.', 'error');
+                return;
+            }
+            if (!confirm('Yakin ingin menghapus data sekolah dan seluruh siswa di dalamnya?')) return;
+
+            google.script.run
+                .withSuccessHandler(function (result) {
+                    if (result && result.status === 'error') {
+                        showToast(result.message || 'Gagal menghapus data.', 'error');
+                        return;
+                    }
+                    showToast('Data berhasil dihapus.', 'success');
+                    refreshData(renderRekapGuru);
+                })
+                .withFailureHandler(function (err) {
+                    showToast('Gagal menghapus data: ' + err.message, 'error');
+                })
+                .hapusSekolah(id, password);
+        }
+
+        // ==================== MURID HANDLERS ====================
+
+        // Normalisasi nama sekolah agar perbandingan tidak sensitif
+        // terhadap huruf besar/kecil, spasi ganda, atau spasi di ujung.
+        function normalizeNamaSekolah(nama) {
+            return String(nama || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        }
+
+        // Mengelompokkan entri sekolah yang namanya sama menjadi satu grup.
+        // Setiap grup menyimpan semua ID sekolah asli (bisa lebih dari satu
+        // entri hasil input berbeda) agar siswa dari entri-entri tersebut
+        // tetap bisa ditampilkan bersama di Akun Murid.
+        function buildSekolahGroups() {
+            var groups = {};
+            var order = [];
+
+            sekolahList.forEach(function (s) {
+                var key = normalizeNamaSekolah(s.namaSekolah);
+                if (!groups[key]) {
+                    groups[key] = {
+                        key: key,
+                        namaSekolah: s.namaSekolah,
+                        npsn: s.npsn,
+                        ids: []
+                    };
+                    order.push(key);
+                }
+                groups[key].ids.push(s.id);
+            });
+
+            return order.map(function (k) { return groups[k]; });
+        }
+
+        function populateDropdownSekolah() {
+            var select = document.getElementById('murid-select-sekolah');
+            select.innerHTML = '<option value="">-- Pilih Asal Sekolah --</option>';
+
+            var groups = buildSekolahGroups();
+            groups.forEach(function (g) {
+                var opt = document.createElement('option');
+                // Value berisi seluruh ID sekolah yang tergabung, dipisah koma
+                opt.value = g.ids.join(',');
+                opt.textContent = g.namaSekolah + ' (NPSN: ' + g.npsn + ')';
+                select.appendChild(opt);
+            });
+
+            document.getElementById('murid-select-siswa').innerHTML = '<option value="">-- Pilih Nama Anda --</option>';
+            document.getElementById('murid-select-siswa').disabled = true;
+            document.getElementById('form-murid').classList.add('hidden');
+            document.getElementById('wrapper-download-excel').classList.add('hidden');
+        }
+
+        function loadSiswaList() {
+            var sekolahIdsStr = document.getElementById('murid-select-sekolah').value;
+            var siswaSelect = document.getElementById('murid-select-siswa');
+            var wrapperDownload = document.getElementById('wrapper-download-excel');
+            document.getElementById('form-murid').classList.add('hidden');
+
+            if (!sekolahIdsStr) {
+                siswaSelect.innerHTML = '<option value="">-- Pilih Nama Anda --</option>';
+                siswaSelect.disabled = true;
+                wrapperDownload.classList.add('hidden');
+                return;
+            }
+
+            wrapperDownload.classList.remove('hidden');
+
+            // Sekolah dengan nama sama digabung: value dropdown berisi
+            // beberapa ID sekolah dipisah koma, jadi filter siswa dari
+            // seluruh ID tersebut sekaligus.
+            var sekolahIds = sekolahIdsStr.split(',');
+            var filtered = siswaList.filter(function (s) { return sekolahIds.indexOf(s.sekolahId) !== -1; });
+
+            siswaSelect.innerHTML = '<option value="">-- Pilih Nama Anda (' + filtered.length + ' Siswa) --</option>';
+            filtered.forEach(function (s) {
+                var opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.no + '. ' + s.nama + ' (NISN: ' + s.nisn + ')';
+                siswaSelect.appendChild(opt);
+            });
+            siswaSelect.disabled = false;
+        }
+
+        function downloadExcelSekolah() {
+            var sekolahIdsStr = document.getElementById('murid-select-sekolah').value;
+            if (!sekolahIdsStr) {
+                showToast('Pilih sekolah terlebih dahulu.', 'error');
+                return;
+            }
+
+            var sekolahIds = sekolahIdsStr.split(',');
+
+            // Info tampilan (nama & NPSN) diambil dari entri pertama yang cocok,
+            // karena seluruh entri dalam grup ini punya nama sekolah yang sama.
+            var sekolahDisplay = sekolahList.find(function (s) { return sekolahIds.indexOf(s.id) !== -1; });
+            if (!sekolahDisplay) return;
+
+            // Gabungkan siswa dari seluruh entri sekolah yang tergabung dalam grup ini.
+            var filteredSiswa = siswaList.filter(function (s) { return sekolahIds.indexOf(s.sekolahId) !== -1; });
+
+            var csvContent = 'data:text/csv;charset=utf-8,';
+            // Bungkus angka panjang (NISN/NPSN) dengan ="..." agar Excel
+            // membacanya sebagai TEKS, bukan angka (mencegah notasi ilmiah
+            // seperti 1,23E+08 dan mempertahankan angka 0 di depan).
+            function forceText(val) {
+                var v = String(val == null ? '' : val).trim();
+                return '="' + v + '"';
+            }
+
+            csvContent += 'No\tNama Sekolah Asal\tNPSN\tNama Lulusan\tNISN\tTahun Lulus\tNama Sekolah Tujuan\tNPSN Sekolah Tujuan\tJenjang (SMA/SMK/MA/Ponpes)\tStatus Sekolah Tujuan (N/S)\tJalur Masuk\tMelanjutkan/ Tidak\tAlasan (jika tidak)\tKeterangan\n';
+
+            filteredSiswa.forEach(function (s) {
+                // Tahun lulus diambil dari entri sekolah asli milik siswa ini,
+                // karena entri yang digabung bisa saja punya tahun lulus berbeda.
+                var sekolahAsli = sekolahList.find(function (sk) { return sk.id === s.sekolahId; });
+                var row = [
+                    s.no,
+                    '"' + sekolahDisplay.namaSekolah + '"',
+                    forceText(sekolahDisplay.npsn),
+                    '"' + s.nama + '"',
+                    forceText(s.nisn),
+                    sekolahAsli ? sekolahAsli.tahun : sekolahDisplay.tahun,
+                    '"' + (s.sekolahTujuan || '') + '"',
+                    forceText(s.npsnTujuan),
+                    s.jenjang || '',
+                    s.status || '',
+                    s.jalur || '',
+                    s.melanjutkan || '',
+                    '"' + (s.alasan || '') + '"',
+                    '"' + (s.keterangan || '') + '"'
+                ];
+                csvContent += row.join('\t') + '\n';
+            });
+
+            var encodedUri = encodeURI(csvContent);
+            var link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+
+            var cleanNamaSekolah = sekolahDisplay.namaSekolah.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+            var fileName = 'Tracer Study-' + sekolahDisplay.npsn + '-' + cleanNamaSekolah + '.xls';
+
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('Berhasil mendownload rekap untuk ' + sekolahDisplay.namaSekolah, 'success');
+        }
+
+        function selectSiswaData() {
+            var siswaId = document.getElementById('murid-select-siswa').value;
+            var formMurid = document.getElementById('form-murid');
+
+            if (!siswaId) {
+                formMurid.classList.add('hidden');
+                return;
+            }
+
+            var siswa = siswaList.find(function (s) { return s.id === siswaId; });
+            var sekolah = siswa ? sekolahList.find(function (s) { return s.id === siswa.sekolahId; }) : null;
+
+            if (siswa) {
+                document.getElementById('m-id').value = siswa.id;
+                document.getElementById('lbl-nama').textContent = siswa.nama;
+                document.getElementById('lbl-nisn').textContent = siswa.nisn;
+                document.getElementById('lbl-sekolahasal').textContent = sekolah ? sekolah.namaSekolah : '-';
+
+                // Tidak lagi memaksa default "Ya"/"SMP"/"Negeri"/"Domisili".
+                // Jika siswa belum pernah mengisi, field akan tetap kosong (placeholder).
+                document.getElementById('m-melanjutkan').value = siswa.melanjutkan || '';
+                document.getElementById('m-jenjang').value = siswa.jenjang || '';
+                document.getElementById('m-status').value = siswa.status || '';
+                document.getElementById('m-jalur').value = siswa.jalur || '';
+                document.getElementById('m-sekolahtujuan').value = siswa.sekolahTujuan || '';
+                document.getElementById('m-npsntujuan').value = siswa.npsnTujuan || '';
+                document.getElementById('m-alasan').value = siswa.alasan || '';
+                document.getElementById('m-keterangan').value = siswa.keterangan || '';
+
+                toggleMelanjutkan();
+                formMurid.classList.remove('hidden');
+            }
+        }
+
+        function toggleMelanjutkan() {
+            var status = document.getElementById('m-melanjutkan').value;
+            var containerMelanjutkan = document.getElementById('container-melanjutkan');
+            var containerTidak = document.getElementById('container-tidak');
+
+            if (status === 'Melanjutkan') {
+                containerMelanjutkan.classList.remove('hidden');
+                containerTidak.classList.add('hidden');
+                document.getElementById('m-sekolahtujuan').required = true;
+                document.getElementById('m-npsntujuan').required = true;
+                document.getElementById('m-alasan').required = false;
+            } else if (status === 'Tidak Melanjutkan') {
+                containerMelanjutkan.classList.add('hidden');
+                containerTidak.classList.remove('hidden');
+                document.getElementById('m-sekolahtujuan').required = false;
+                document.getElementById('m-npsntujuan').required = false;
+                document.getElementById('m-alasan').required = true;
+            } else {
+                // Belum memilih apa-apa: sembunyikan kedua kontainer
+                containerMelanjutkan.classList.add('hidden');
+                containerTidak.classList.add('hidden');
+                document.getElementById('m-sekolahtujuan').required = false;
+                document.getElementById('m-npsntujuan').required = false;
+                document.getElementById('m-alasan').required = false;
+            }
+        }
+
+        function searchGoogleNPSN() {
+            var namaSekolahTujuan = document.getElementById('m-sekolahtujuan').value.trim();
+            if (!namaSekolahTujuan) {
+                showToast('Masukkan nama sekolah tujuan terlebih dahulu untuk pencarian NPSN di Google.', 'error');
+                return;
+            }
+            var query = encodeURIComponent('NPSN ' + namaSekolahTujuan + ' data referensi kemdikbud');
+            window.open('https://www.google.com/search?q=' + query, '_blank');
+        }
+
+        function handleMuridSubmit(e) {
+            e.preventDefault();
+            var btn = document.getElementById('btn-submit-murid');
+
+            var payload = {
+                id: document.getElementById('m-id').value,
+                melanjutkan: document.getElementById('m-melanjutkan').value,
+                jenjang: document.getElementById('m-jenjang').value,
+                status: document.getElementById('m-status').value,
+                jalur: document.getElementById('m-jalur').value,
+                sekolahTujuan: document.getElementById('m-sekolahtujuan').value,
+                npsnTujuan: document.getElementById('m-npsntujuan').value,
+                alasan: document.getElementById('m-alasan').value,
+                keterangan: document.getElementById('m-keterangan').value
+            };
+
+            setBtnLoading(btn, 'Mengirim...');
+
+            google.script.run
+                .withSuccessHandler(function (result) {
+                    resetBtnLoading(btn);
+                    if (result.status === 'success') {
+                        showToast('Konfirmasi data kelanjutan sekolah berhasil disimpan!', 'success');
+                        refreshData(function () {
+                            var sekId = document.getElementById('murid-select-sekolah').value;
+                            if (sekId) loadSiswaList();
+                        });
+                    } else {
+                        showToast(result.message || 'Terjadi kesalahan.', 'error');
+                    }
+                })
+                .withFailureHandler(function (err) {
+                    resetBtnLoading(btn);
+                    showToast('Gagal menyimpan: ' + err.message, 'error');
+                })
+                .updateSiswaData(payload);
+        }
+    </script>
+</body>
+</html>
