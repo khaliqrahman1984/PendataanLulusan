@@ -97,9 +97,9 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-gradient-to-br from-slate-200 via-slate-300 to-indigo-200/60 text-slate-800 min-h-screen flex flex-col">
 
-    <header class="bg-indigo-600 text-white shadow-md sticky top-0 z-20">
+    <header class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 text-white shadow-md sticky top-0 z-20">
         <div class="max-w-7xl mx-auto px-3 py-3 sm:px-4 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
             <div class="flex items-center space-x-3">
                 <div class="bg-white text-indigo-600 p-2 rounded-xl shadow-inner font-bold text-lg sm:text-xl shrink-0">
@@ -139,7 +139,7 @@
 
         <!-- ==================== GURU SECTION ==================== -->
         <section id="section-guru" class="space-y-4 sm:space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
+            <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-4 sm:p-8">
                 <div class="border-b border-slate-100 pb-4 mb-6">
                     <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center">
                         <i class="fa-solid fa-school text-indigo-600 mr-2"></i> Form Input Data Lulusan (Bulk Data)
@@ -181,7 +181,7 @@
 
                     <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
                         <button type="reset" class="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition">Reset</button>
-                        <button type="submit" id="btn-submit-guru" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center justify-center">
+                        <button type="submit" id="btn-submit-guru" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold text-sm shadow-sm transition flex items-center justify-center">
                             <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Simpan Data Lulusan
                         </button>
                     </div>
@@ -189,7 +189,7 @@
             </div>
 
             <!-- Dashboard Data Overview for Teachers -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
+            <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-4 sm:p-8">
                 <h3 class="text-sm sm:text-md font-bold text-slate-900 mb-4 flex items-center">
                     <i class="fa-solid fa-database text-indigo-600 mr-2"></i> Rekapitulasi Data Sekolah Terdaftar
                 </h3>
@@ -212,7 +212,7 @@
             </div>
 
             <!-- Dashboard Siswa Belum Mengisi Konfirmasi (Tema Merah) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-rose-200 p-4 sm:p-8">
+            <div class="bg-white rounded-2xl shadow-md border border-rose-200 p-4 sm:p-8">
                 <h3 class="text-sm sm:text-md font-bold text-rose-700 mb-4 flex items-center flex-wrap gap-2">
                     <span class="flex items-center"><i class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>
                     Siswa Belum Mengisi Konfirmasi</span>
@@ -248,7 +248,7 @@
 
         <!-- ==================== MURID SECTION ==================== -->
         <section id="section-murid" class="hidden space-y-4 sm:space-y-6">
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8">
+            <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-4 sm:p-8">
                 <div class="border-b border-slate-100 pb-4 mb-6">
                     <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center">
                         <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-2"></i> Pencarian & Konfirmasi Kelanjutan
@@ -257,7 +257,7 @@
                 </div>
 
                 <!-- Step 1: Search Form -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 bg-indigo-50/50 p-4 sm:p-6 rounded-2xl border border-indigo-100 mb-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 bg-gradient-to-br from-indigo-50 to-violet-50/60 p-4 sm:p-6 rounded-2xl border border-indigo-100 mb-6">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-2">1. Pilih Nama Sekolah Asal</label>
                         <select id="murid-select-sekolah" onchange="loadSiswaList()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
@@ -322,6 +322,7 @@
                                     <option value="" disabled>-- Pilih Jalur --</option>
                                     <option value="Domisili">Domisili</option>
                                     <option value="Afirmasi">Afirmasi</option>
+                                    <option value="Prestasi">Prestasi</option>
                                     <option value="Mutasi">Mutasi</option>
                                 </select>
                             </div>
@@ -359,7 +360,7 @@
                     </div>
 
                     <div class="flex justify-end pt-2">
-                        <button type="submit" id="btn-submit-murid" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm transition flex items-center justify-center">
+                        <button type="submit" id="btn-submit-murid" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-semibold text-sm shadow-sm transition flex items-center justify-center">
                             <i class="fa-solid fa-paper-plane mr-2"></i> Kirim Konfirmasi Data
                         </button>
                     </div>
@@ -369,9 +370,37 @@
 
     </main>
 
+    <!-- Modal Password -->
+    <div id="modal-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <div class="min-w-0">
+                    <h3 id="modal-password-title" class="text-sm font-bold text-slate-800">Konfirmasi Password</h3>
+                    <p id="modal-password-desc" class="text-xs text-slate-500">Masukkan password untuk melanjutkan.</p>
+                </div>
+            </div>
+            <div class="relative mb-1">
+                <input type="password" id="modal-password-input" class="w-full px-4 py-2.5 pr-11 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Masukkan password">
+                <button type="button" onclick="toggleModalPasswordVisibility()" class="absolute right-1 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center text-slate-400 hover:text-slate-600">
+                    <i id="modal-password-eye" class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+            <p id="modal-password-error" class="hidden text-xs text-rose-600 mb-2"><i class="fa-solid fa-circle-exclamation mr-1"></i>Password wajib diisi.</p>
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button" onclick="closePasswordModal(false)" class="px-4 py-2 rounded-xl border border-slate-300 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Batal</button>
+                <button type="button" id="modal-password-confirm" onclick="closePasswordModal(true)" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold shadow-sm transition">
+                    <i class="fa-solid fa-check mr-1.5"></i>Konfirmasi
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== GANTI DENGAN URL DEPLOYMENT WEB APP APPS SCRIPT ANDA =====
-        var API_URL = 'https://script.google.com/macros/s/AKfycbzdfGQQSuoauHUldE5lVYLHdXQSbyZ3bhPzvZXfgQFZMQjE5lWaO84iPfH6NFTAiHH_Vw/exec';
+        var API_URL = 'https://script.google.com/macros/s/AKfycbwX0ZxXQYnDDrhe-qvMgrwddOdKxYv8YAzvvTuHvWlyvld2ker05OdbxXHOZjYzsMlLyg/exec';
 
         // Shim (tiruan) google.script.run supaya kode di bawah tidak perlu
         // diubah. Di balik layar, ini memanggil Web App Apps Script lewat
@@ -429,6 +458,16 @@
             refreshData(function () {
                 renderRekapGuru();
             });
+
+            var pwInput = document.getElementById('modal-password-input');
+            if (pwInput) {
+                pwInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        closePasswordModal(true);
+                    }
+                });
+            }
         });
 
         function showToast(message, type) {
@@ -464,6 +503,55 @@
                 btn.innerHTML = btn.dataset.originalHtml;
             }
             btn.classList.remove('btn-loading');
+        }
+
+        // ===== Modal Password (pengganti prompt() bawaan browser) =====
+        var _passwordModalCallback = null;
+
+        function askPassword(title, desc, callback) {
+            document.getElementById('modal-password-title').textContent = title;
+            document.getElementById('modal-password-desc').textContent = desc;
+            var input = document.getElementById('modal-password-input');
+            input.value = '';
+            input.type = 'password';
+            document.getElementById('modal-password-eye').className = 'fa-solid fa-eye';
+            document.getElementById('modal-password-error').classList.add('hidden');
+            _passwordModalCallback = callback;
+            document.getElementById('modal-password').classList.remove('hidden');
+            setTimeout(function () { input.focus(); }, 50);
+        }
+
+        function toggleModalPasswordVisibility() {
+            var input = document.getElementById('modal-password-input');
+            var eye = document.getElementById('modal-password-eye');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eye.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                eye.className = 'fa-solid fa-eye';
+            }
+        }
+
+        function closePasswordModal(confirmed) {
+            var input = document.getElementById('modal-password-input');
+            var errorEl = document.getElementById('modal-password-error');
+            var cb = _passwordModalCallback;
+
+            if (confirmed) {
+                var val = input.value;
+                if (val === '') {
+                    errorEl.classList.remove('hidden');
+                    return;
+                }
+                document.getElementById('modal-password').classList.add('hidden');
+                _passwordModalCallback = null;
+                if (cb) cb(val);
+            } else {
+                document.getElementById('modal-password').classList.add('hidden');
+                _passwordModalCallback = null;
+                if (cb) cb(null);
+            }
         }
 
         // Ambil data terbaru dari Google Sheets
@@ -518,34 +606,31 @@
             var btn = document.getElementById('btn-submit-guru');
 
             if (editId) {
-                var password = prompt('Masukkan password untuk menyimpan perubahan data sekolah:');
-                if (password === null) return; // dibatalkan
-                if (password === '') {
-                    showToast('Password wajib diisi.', 'error');
-                    return;
-                }
+                askPassword('Konfirmasi Perubahan', 'Masukkan password untuk menyimpan perubahan data sekolah.', function (password) {
+                    if (password === null) return; // dibatalkan
 
-                setBtnLoading(btn, 'Menyimpan...');
+                    setBtnLoading(btn, 'Menyimpan...');
 
-                google.script.run
-                    .withSuccessHandler(function (result) {
-                        resetBtnLoading(btn);
-                        if (result.status === 'success') {
-                            var pesanTambahan = '';
-                            if (result.added > 0) pesanTambahan += ' (+' + result.added + ' siswa baru ditambahkan)';
-                            if (result.updated > 0) pesanTambahan += ' (' + result.updated + ' siswa diperbarui)';
-                            showToast('Berhasil memperbarui data sekolah!' + pesanTambahan, 'success');
-                            cancelEditSekolah();
-                            refreshData(renderRekapGuru);
-                        } else {
-                            showToast(result.message || 'Gagal memperbarui data.', 'error');
-                        }
-                    })
-                    .withFailureHandler(function (err) {
-                        resetBtnLoading(btn);
-                        showToast('Gagal memperbarui data: ' + err.message, 'error');
-                    })
-                    .updateSekolahInfo(editId, namaSekolah, npsn, tahun, bulkText, password);
+                    google.script.run
+                        .withSuccessHandler(function (result) {
+                            resetBtnLoading(btn);
+                            if (result.status === 'success') {
+                                var pesanTambahan = '';
+                                if (result.added > 0) pesanTambahan += ' (+' + result.added + ' siswa baru ditambahkan)';
+                                if (result.updated > 0) pesanTambahan += ' (' + result.updated + ' siswa diperbarui)';
+                                showToast('Berhasil memperbarui data sekolah!' + pesanTambahan, 'success');
+                                cancelEditSekolah();
+                                refreshData(renderRekapGuru);
+                            } else {
+                                showToast(result.message || 'Gagal memperbarui data.', 'error');
+                            }
+                        })
+                        .withFailureHandler(function (err) {
+                            resetBtnLoading(btn);
+                            showToast('Gagal memperbarui data: ' + err.message, 'error');
+                        })
+                        .updateSekolahInfo(editId, namaSekolah, npsn, tahun, bulkText, password);
+                });
                 return;
             }
 
@@ -710,27 +795,25 @@
         }
 
         function hapusSekolah(id) {
-            var password = prompt('Masukkan password untuk menghapus data sekolah dan seluruh siswa di dalamnya:');
-            if (password === null) return; // dibatalkan
-            if (password === '') {
-                showToast('Password wajib diisi.', 'error');
-                return;
-            }
             if (!confirm('Yakin ingin menghapus data sekolah dan seluruh siswa di dalamnya?')) return;
 
-            google.script.run
-                .withSuccessHandler(function (result) {
-                    if (result && result.status === 'error') {
-                        showToast(result.message || 'Gagal menghapus data.', 'error');
-                        return;
-                    }
-                    showToast('Data berhasil dihapus.', 'success');
-                    refreshData(renderRekapGuru);
-                })
-                .withFailureHandler(function (err) {
-                    showToast('Gagal menghapus data: ' + err.message, 'error');
-                })
-                .hapusSekolah(id, password);
+            askPassword('Konfirmasi Hapus Data', 'Masukkan password untuk menghapus data sekolah dan seluruh siswa di dalamnya.', function (password) {
+                if (password === null) return; // dibatalkan
+
+                google.script.run
+                    .withSuccessHandler(function (result) {
+                        if (result && result.status === 'error') {
+                            showToast(result.message || 'Gagal menghapus data.', 'error');
+                            return;
+                        }
+                        showToast('Data berhasil dihapus.', 'success');
+                        refreshData(renderRekapGuru);
+                    })
+                    .withFailureHandler(function (err) {
+                        showToast('Gagal menghapus data: ' + err.message, 'error');
+                    })
+                    .hapusSekolah(id, password);
+            });
         }
 
         // ==================== MURID HANDLERS ====================
