@@ -122,10 +122,10 @@
             <div class="flex items-center gap-2">
                 <div class="flex flex-1 sm:flex-none bg-indigo-700 p-1 rounded-xl shadow-inner border border-indigo-500">
                     <button onclick="switchTab('guru')" id="tab-guru" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all text-indigo-100 hover:text-white whitespace-nowrap">
-                        <i class="fa-solid fa-chalkboard-user sm:mr-2"></i><span class="hidden xs:inline sm:inline"> Guru/Operator</span>
+                        <i class="fa-solid fa-chalkboard-user mr-1.5 sm:mr-2"></i><span> Guru/Operator</span>
                     </button>
                     <button onclick="switchTab('murid')" id="tab-murid" class="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all bg-rose-500 text-white shadow whitespace-nowrap">
-                        <i class="fa-solid fa-user-graduate sm:mr-2"></i><span class="hidden xs:inline sm:inline"> Murid/Siswa</span>
+                        <i class="fa-solid fa-user-graduate mr-1.5 sm:mr-2"></i><span> Murid/Ortu</span>
                     </button>
                 </div>
                 <!-- Tombol download Excel: hanya muncul di Akun Murid setelah sekolah dipilih -->
@@ -153,7 +153,7 @@
                     <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center">
                         <i class="fa-solid fa-school text-indigo-600 mr-2"></i> Form Input Data Lulusan (Bulk Data)
                     </h2>
-                    <p class="text-xs sm:text-sm text-slate-500 mt-1">Operator sekolah dapat memasukkan data asal sekolah beserta daftar siswa lulusan sekaligus. Data kelanjutan sekolah (melanjutkan/jenjang/status/jalur) akan diisi oleh siswa masing-masing lewat Akun Murid.</p>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1">DIISI OLEH GURU/OPERATOR. Operator sekolah dapat memasukkan data asal sekolah beserta daftar siswa lulusan sekaligus.</p>
                 </div>
 
                 <form id="form-guru" onsubmit="handleGuruSubmit(event)" class="space-y-5 sm:space-y-6">
@@ -273,7 +273,7 @@
             <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-4 sm:p-8">
                 <div class="border-b border-slate-100 pb-4 mb-6">
                     <h2 class="text-base sm:text-lg font-bold text-slate-900 flex items-center">
-                        <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-2"></i> Pencarian & Konfirmasi Kelanjutan
+                        <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-2"></i> DIISI OLEH MURID/WALI MURID
                     </h2>
                     <p class="text-xs sm:text-sm text-slate-500 mt-1">Pilih asal sekolah dan cari nama siswa Anda untuk mengisi data kelanjutan pendidikan.</p>
                 </div>
@@ -422,7 +422,7 @@
 
     <script>
         // ===== GANTI DENGAN URL DEPLOYMENT WEB APP APPS SCRIPT ANDA =====
-        var API_URL = 'https://script.google.com/macros/s/AKfycbykIl-_YeJo5pwoOUfD395f5cjKw5Rh8aLqRCOk2yQMvfSPPDSq8dFxYJ1SuPriCPeBDg/exec';
+        var API_URL = 'https://script.google.com/macros/s/AKfycbz486nkS8t0Ug-xjkSyU2eIwYZmkjAcVLMJnlEZhY9VVhf_-X7viWxm2Ubzsi2YaeM2-Q/exec';
 
         // Shim (tiruan) google.script.run supaya kode di bawah tidak perlu
         // diubah. Di balik layar, ini memanggil Web App Apps Script lewat
