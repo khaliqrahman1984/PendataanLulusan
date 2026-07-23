@@ -175,7 +175,8 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Tahun Lulus *</label>
-                            <input type="number" id="guru-tahun" required inputmode="numeric" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" value="2026">
+                            <input type="number" id="guru-tahun" required inputmode="numeric" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="Memuat...">
+                            
                         </div>
                     </div>
 
@@ -422,7 +423,7 @@
 
     <script>
         // ===== GANTI DENGAN URL DEPLOYMENT WEB APP APPS SCRIPT ANDA =====
-        var API_URL = 'https://script.google.com/macros/s/AKfycbz486nkS8t0Ug-xjkSyU2eIwYZmkjAcVLMJnlEZhY9VVhf_-X7viWxm2Ubzsi2YaeM2-Q/exec';
+        var API_URL = 'https://script.google.com/macros/s/AKfycbzzEmvHSNnaZdnCiLfSX424V1U9Euc5sZPIbHmqanDMI5Mywwe5X8l6wjxwT3VsTtT9AQ/exec';
 
         // Shim (tiruan) google.script.run supaya kode di bawah tidak perlu
         // diubah. Di balik layar, ini memanggil Web App Apps Script lewat
@@ -475,6 +476,7 @@
         // Cache lokal (disinkronkan dari Google Sheets lewat backend Apps Script)
         var sekolahList = [];
         var siswaList = [];
+        var tahunLulusAktif = '';
 
         document.addEventListener('DOMContentLoaded', function () {
             refreshData(function () {
@@ -582,6 +584,17 @@
                 .withSuccessHandler(function (data) {
                     sekolahList = data.sekolah || [];
                     siswaList = data.siswa || [];
+                    tahunLulusAktif = data.tahunLulusAktif || '';
+
+                    // Isi otomatis input "Tahun Lulus" dengan nilai dari sheet Setting,
+                    // tapi hanya jika field masih kosong atau sedang tidak dalam mode edit,
+                    // agar tidak menimpa nilai yang sudah diketik/diedit operator.
+                    var inputTahun = document.getElementById('guru-tahun');
+                    var editId = document.getElementById('guru-edit-id').value;
+                    if (inputTahun && !editId && !inputTahun.value) {
+                        inputTahun.value = tahunLulusAktif;
+                    }
+
                     if (callback) callback();
                 })
                 .withFailureHandler(function (err) {
@@ -657,24 +670,28 @@
                 return;
             }
 
-            setBtnLoading(btn, 'Menyimpan...');
+            askPassword('Konfirmasi Simpan Data', 'Masukkan password untuk menyimpan data lulusan.', function (password) {
+                if (password === null) return; // dibatalkan
 
-            google.script.run
-                .withSuccessHandler(function (result) {
-                    resetBtnLoading(btn);
-                    var pesan = result.isNewSekolah
-                        ? 'Berhasil menyimpan data sekolah dan ' + result.added + ' data siswa lulusan!'
-                        : 'Sekolah sudah terdaftar, data digabung ke sekolah yang sama! (+' + result.added + ' siswa baru' +
-                          (result.updated > 0 ? ', ' + result.updated + ' siswa diperbarui' : '') + ')';
-                    showToast(pesan, 'success');
-                    document.getElementById('form-guru').reset();
-                    refreshData(renderRekapGuru);
-                })
-                .withFailureHandler(function (err) {
-                    resetBtnLoading(btn);
-                    showToast('Gagal menyimpan data: ' + err.message, 'error');
-                })
-                .saveSekolahDanSiswa(namaSekolah, npsn, tahun, bulkText);
+                setBtnLoading(btn, 'Menyimpan...');
+
+                google.script.run
+                    .withSuccessHandler(function (result) {
+                        resetBtnLoading(btn);
+                        var pesan = result.isNewSekolah
+                            ? 'Berhasil menyimpan data sekolah dan ' + result.added + ' data siswa lulusan!'
+                            : 'Sekolah sudah terdaftar, data digabung ke sekolah yang sama! (+' + result.added + ' siswa baru' +
+                              (result.updated > 0 ? ', ' + result.updated + ' siswa diperbarui' : '') + ')';
+                        showToast(pesan, 'success');
+                        document.getElementById('form-guru').reset();
+                        refreshData(renderRekapGuru);
+                    })
+                    .withFailureHandler(function (err) {
+                        resetBtnLoading(btn);
+                        showToast('Gagal menyimpan data: ' + err.message, 'error');
+                    })
+                    .saveSekolahDanSiswa(namaSekolah, npsn, tahun, bulkText, password);
+            });
         }
 
         function renderRekapGuru() {
@@ -856,6 +873,7 @@
             document.getElementById('form-guru').reset();
             document.getElementById('guru-edit-id').value = '';
             document.getElementById('guru-bulk').required = true;
+            document.getElementById('guru-tahun').value = tahunLulusAktif;
 
             document.getElementById('banner-edit-mode').classList.add('hidden');
             document.getElementById('hint-guru-bulk').classList.add('hidden');
