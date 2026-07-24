@@ -25,6 +25,15 @@
             100% { transform: rotate(0deg) scale(1); }
         }
 
+        /* Spinner untuk tombol download: putar 360 derajat penuh */
+        @keyframes spin-download {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .icon-spin-download {
+            animation: spin-download 0.7s linear infinite;
+        }
+
         /* Titik-titik loncat "..." */
         .fun-dots span {
             display: inline-block;
@@ -37,6 +46,39 @@
         @keyframes fun-dot-bounce {
             0%, 60%, 100% { opacity: 0.4; transform: translateY(0); }
             30% { opacity: 1; transform: translateY(-3px); }
+        }
+
+        /* ===== Animasi modal dialog peringatan (elegan) ===== */
+        @keyframes modal-backdrop-fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes modal-card-pop {
+            0% { opacity: 0; transform: translateY(14px) scale(0.94); }
+            60% { opacity: 1; transform: translateY(-2px) scale(1.015); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes modal-icon-bounce {
+            0%   { transform: scale(0.5) rotate(-8deg); opacity: 0; }
+            50%  { transform: scale(1.15) rotate(4deg); opacity: 1; }
+            75%  { transform: scale(0.95) rotate(-2deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+        .modal-backdrop-anim {
+            animation: modal-backdrop-fade 0.22s ease-out both;
+        }
+        .modal-card-anim {
+            animation: modal-card-pop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .modal-icon-anim {
+            animation: modal-icon-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.05s both;
+        }
+        .modal-closing .modal-backdrop-anim,
+        .modal-closing.modal-backdrop-anim {
+            animation: modal-backdrop-fade 0.18s ease-in reverse both;
+        }
+        .modal-closing .modal-card-anim {
+            animation: modal-card-pop 0.18s ease-in reverse both;
         }
 
         /* ===== Responsive table -> card di layar HP ===== */
@@ -128,10 +170,12 @@
                         <i class="fa-solid fa-user-graduate mr-1.5 sm:mr-2"></i><span> Murid/Ortu</span>
                     </button>
                 </div>
-                <!-- Tombol download Excel: hanya muncul di Akun Murid setelah sekolah dipilih -->
+                <!-- Tombol download Excel: selalu tampil di Akun Murid/Ortu.
+                     Warna coklat (belum aktif) sebelum sekolah dipilih,
+                     berubah hijau setelah sekolah dipilih. -->
                 <div id="wrapper-download-excel" class="hidden shrink-0">
-                    <button onclick="downloadExcelSekolah()" title="Download Rekap Excel Sekolah Ini" class="w-10 h-10 flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-inner border border-emerald-400 transition">
-                        <i class="fa-solid fa-file-excel text-lg"></i>
+                    <button id="btn-download-excel" onclick="downloadExcelSekolah()" title="Download Rekap Excel Sekolah Ini" class="w-10 h-10 flex items-center justify-center bg-amber-700 hover:bg-amber-600 text-white rounded-xl shadow-inner border border-amber-800 transition">
+                        <i id="btn-download-excel-icon" class="fa-solid fa-download text-lg"></i>
                     </button>
                 </div>
             </div>
@@ -393,6 +437,20 @@
 
     </main>
 
+    <!-- Modal Peringatan Umum (dipakai untuk peringatan download, dll) -->
+    <div id="modal-peringatan" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm modal-backdrop-anim" onclick="if(event.target===this) tutupModalPeringatan()">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center modal-card-anim">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center modal-icon-anim">
+                <i id="modal-peringatan-icon" class="fa-solid fa-school-flag text-2xl"></i>
+            </div>
+            <h3 id="modal-peringatan-title" class="text-base font-bold text-slate-800 mb-1.5">Pilih Sekolah Dulu</h3>
+            <p id="modal-peringatan-desc" class="text-sm text-slate-500 mb-5">Silakan pilih Asal Sekolah terlebih dahulu sebelum mendownload rekap Excel.</p>
+            <button type="button" onclick="tutupModalPeringatan()" class="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-sm font-semibold shadow-sm transition">
+                <i class="fa-solid fa-check mr-1.5"></i> Mengerti
+            </button>
+        </div>
+    </div>
+
     <!-- Modal Password -->
     <div id="modal-password" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
@@ -423,7 +481,7 @@
 
     <script>
         // ===== GANTI DENGAN URL DEPLOYMENT WEB APP APPS SCRIPT ANDA =====
-        var API_URL = 'https://script.google.com/macros/s/AKfycbzzEmvHSNnaZdnCiLfSX424V1U9Euc5sZPIbHmqanDMI5Mywwe5X8l6wjxwT3VsTtT9AQ/exec';
+        var API_URL = 'https://script.google.com/macros/s/AKfycbxw4Fdt0CCEbasr_-7TGro9un4myGn6UUzGCG7Ay1PTK200ejyE2-lgjadw681mgVlkRA/exec';
 
         // Shim (tiruan) google.script.run supaya kode di bawah tidak perlu
         // diubah. Di balik layar, ini memanggil Web App Apps Script lewat
@@ -576,6 +634,34 @@
                 _passwordModalCallback = null;
                 if (cb) cb(null);
             }
+        }
+
+        // ===== Modal Peringatan Umum (animasi elegan, pengganti alert()) =====
+        function tampilkanModalPeringatan(opsi) {
+            opsi = opsi || {};
+            var modal = document.getElementById('modal-peringatan');
+            document.getElementById('modal-peringatan-title').textContent = opsi.title || 'Perhatian';
+            document.getElementById('modal-peringatan-desc').textContent = opsi.desc || '';
+            document.getElementById('modal-peringatan-icon').className = 'fa-solid ' + (opsi.icon || 'fa-circle-info') + ' text-2xl';
+
+            modal.classList.remove('hidden');
+            modal.classList.remove('modal-closing');
+            // Re-trigger animasi masuk setiap kali dibuka
+            var card = modal.querySelector('.modal-card-anim');
+            modal.style.animation = 'none';
+            card.style.animation = 'none';
+            void modal.offsetWidth; // force reflow
+            modal.style.animation = '';
+            card.style.animation = '';
+        }
+
+        function tutupModalPeringatan() {
+            var modal = document.getElementById('modal-peringatan');
+            modal.classList.add('modal-closing');
+            setTimeout(function () {
+                modal.classList.add('hidden');
+                modal.classList.remove('modal-closing');
+            }, 190);
         }
 
         // Ambil data terbaru dari Google Sheets
@@ -954,23 +1040,38 @@
             document.getElementById('murid-select-siswa').innerHTML = '<option value="">-- Pilih Nama Anda --</option>';
             document.getElementById('murid-select-siswa').disabled = true;
             document.getElementById('form-murid').classList.add('hidden');
-            document.getElementById('wrapper-download-excel').classList.add('hidden');
+
+            // Tombol download selalu tampil di Akun Murid/Ortu, warna coklat (belum aktif)
+            document.getElementById('wrapper-download-excel').classList.remove('hidden');
+            setTombolDownloadAktif(false);
+        }
+
+        // Mengatur tampilan tombol download Excel:
+        // aktif=false -> coklat (sekolah belum dipilih)
+        // aktif=true  -> hijau (sekolah sudah dipilih)
+        function setTombolDownloadAktif(aktif) {
+            var btn = document.getElementById('btn-download-excel');
+            if (!btn) return;
+            if (aktif) {
+                btn.className = 'w-10 h-10 flex items-center justify-center bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl shadow-inner border border-emerald-400 transition';
+            } else {
+                btn.className = 'w-10 h-10 flex items-center justify-center bg-amber-700 hover:bg-amber-600 text-white rounded-xl shadow-inner border border-amber-800 transition';
+            }
         }
 
         function loadSiswaList() {
             var sekolahIdsStr = document.getElementById('murid-select-sekolah').value;
             var siswaSelect = document.getElementById('murid-select-siswa');
-            var wrapperDownload = document.getElementById('wrapper-download-excel');
             document.getElementById('form-murid').classList.add('hidden');
 
             if (!sekolahIdsStr) {
                 siswaSelect.innerHTML = '<option value="">-- Pilih Nama Anda --</option>';
                 siswaSelect.disabled = true;
-                wrapperDownload.classList.add('hidden');
+                setTombolDownloadAktif(false);
                 return;
             }
 
-            wrapperDownload.classList.remove('hidden');
+            setTombolDownloadAktif(true);
 
             // Sekolah dengan nama sama digabung: value dropdown berisi
             // beberapa ID sekolah dipisah koma, jadi filter siswa dari
@@ -991,67 +1092,91 @@
         function downloadExcelSekolah() {
             var sekolahIdsStr = document.getElementById('murid-select-sekolah').value;
             if (!sekolahIdsStr) {
-                showToast('Pilih sekolah terlebih dahulu.', 'error');
+                tampilkanModalPeringatan({
+                    title: 'Pilih Sekolah Dulu',
+                    desc: 'Silakan pilih Asal Sekolah terlebih di menu MURID/ORTU dahulu sebelum mendownload rekap Excel.',
+                    icon: 'fa-user-graduate'
+                });
                 return;
             }
 
-            var sekolahIds = sekolahIdsStr.split(',');
+            var btn = document.getElementById('btn-download-excel');
+            var icon = document.getElementById('btn-download-excel-icon');
 
-            // Info tampilan (nama & NPSN) diambil dari entri pertama yang cocok,
-            // karena seluruh entri dalam grup ini punya nama sekolah yang sama.
-            var sekolahDisplay = sekolahList.find(function (s) { return sekolahIds.indexOf(s.id) !== -1; });
-            if (!sekolahDisplay) return;
+            // Tampilkan animasi spin (putar-putar) selama proses menyiapkan file
+            btn.classList.add('pointer-events-none', 'opacity-80');
+            icon.className = 'fa-solid fa-spinner icon-spin-download text-lg';
 
-            // Gabungkan siswa dari seluruh entri sekolah yang tergabung dalam grup ini.
-            var filteredSiswa = siswaList.filter(function (s) { return sekolahIds.indexOf(s.sekolahId) !== -1; });
+            // Beri jeda sesaat agar animasi spin terlihat sebelum file benar-benar diunduh
+            setTimeout(function () {
+                var sekolahIds = sekolahIdsStr.split(',');
 
-            var csvContent = 'data:text/csv;charset=utf-8,';
-            // Bungkus angka panjang (NISN/NPSN) dengan ="..." agar Excel
-            // membacanya sebagai TEKS, bukan angka (mencegah notasi ilmiah
-            // seperti 1,23E+08 dan mempertahankan angka 0 di depan).
-            function forceText(val) {
-                var v = String(val == null ? '' : val).trim();
-                return '="' + v + '"';
-            }
+                // Info tampilan (nama & NPSN) diambil dari entri pertama yang cocok,
+                // karena seluruh entri dalam grup ini punya nama sekolah yang sama.
+                var sekolahDisplay = sekolahList.find(function (s) { return sekolahIds.indexOf(s.id) !== -1; });
+                if (!sekolahDisplay) {
+                    resetTombolDownloadIcon(btn, icon);
+                    return;
+                }
 
-            csvContent += 'No\tNama Sekolah Asal\tNPSN\tNama Lulusan\tNISN\tTahun Lulus\tNama Sekolah Tujuan\tNPSN Sekolah Tujuan\tJenjang (SMA/SMK/MA/Ponpes)\tStatus Sekolah Tujuan (N/S)\tJalur Masuk\tMelanjutkan/ Tidak\tAlasan (jika tidak)\tKeterangan\n';
+                // Gabungkan siswa dari seluruh entri sekolah yang tergabung dalam grup ini.
+                var filteredSiswa = siswaList.filter(function (s) { return sekolahIds.indexOf(s.sekolahId) !== -1; });
 
-            filteredSiswa.forEach(function (s) {
-                // Tahun lulus diambil dari entri sekolah asli milik siswa ini,
-                // karena entri yang digabung bisa saja punya tahun lulus berbeda.
-                var sekolahAsli = sekolahList.find(function (sk) { return sk.id === s.sekolahId; });
-                var row = [
-                    s.no,
-                    '"' + sekolahDisplay.namaSekolah + '"',
-                    forceText(sekolahDisplay.npsn),
-                    '"' + s.nama + '"',
-                    forceText(s.nisn),
-                    sekolahAsli ? sekolahAsli.tahun : sekolahDisplay.tahun,
-                    '"' + (s.sekolahTujuan || '') + '"',
-                    forceText(s.npsnTujuan),
-                    s.jenjang || '',
-                    s.status || '',
-                    s.jalur || '',
-                    s.melanjutkan || '',
-                    '"' + (s.alasan || '') + '"',
-                    '"' + (s.keterangan || '') + '"'
-                ];
-                csvContent += row.join('\t') + '\n';
-            });
+                var csvContent = 'data:text/csv;charset=utf-8,';
+                // Bungkus angka panjang (NISN/NPSN) dengan ="..." agar Excel
+                // membacanya sebagai TEKS, bukan angka (mencegah notasi ilmiah
+                // seperti 1,23E+08 dan mempertahankan angka 0 di depan).
+                function forceText(val) {
+                    var v = String(val == null ? '' : val).trim();
+                    return '="' + v + '"';
+                }
 
-            var encodedUri = encodeURI(csvContent);
-            var link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
+                csvContent += 'No\tNama Sekolah Asal\tNPSN\tNama Lulusan\tNISN\tTahun Lulus\tNama Sekolah Tujuan\tNPSN Sekolah Tujuan\tJenjang (SMA/SMK/MA/Ponpes)\tStatus Sekolah Tujuan (N/S)\tJalur Masuk\tMelanjutkan/ Tidak\tAlasan (jika tidak)\tKeterangan\n';
 
-            var cleanNamaSekolah = sekolahDisplay.namaSekolah.replace(/[^a-zA-Z0-9 ]/g, '').trim();
-            var fileName = 'Tracer Study-' + sekolahDisplay.npsn + '-' + cleanNamaSekolah + '.xls';
+                filteredSiswa.forEach(function (s) {
+                    // Tahun lulus diambil dari entri sekolah asli milik siswa ini,
+                    // karena entri yang digabung bisa saja punya tahun lulus berbeda.
+                    var sekolahAsli = sekolahList.find(function (sk) { return sk.id === s.sekolahId; });
+                    var row = [
+                        s.no,
+                        '"' + sekolahDisplay.namaSekolah + '"',
+                        forceText(sekolahDisplay.npsn),
+                        '"' + s.nama + '"',
+                        forceText(s.nisn),
+                        sekolahAsli ? sekolahAsli.tahun : sekolahDisplay.tahun,
+                        '"' + (s.sekolahTujuan || '') + '"',
+                        forceText(s.npsnTujuan),
+                        s.jenjang || '',
+                        s.status || '',
+                        s.jalur || '',
+                        s.melanjutkan || '',
+                        '"' + (s.alasan || '') + '"',
+                        '"' + (s.keterangan || '') + '"'
+                    ];
+                    csvContent += row.join('\t') + '\n';
+                });
 
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                var encodedUri = encodeURI(csvContent);
+                var link = document.createElement('a');
+                link.setAttribute('href', encodedUri);
 
-            showToast('Berhasil mendownload rekap untuk ' + sekolahDisplay.namaSekolah, 'success');
+                var cleanNamaSekolah = sekolahDisplay.namaSekolah.replace(/[^a-zA-Z0-9 ]/g, '').trim();
+                var fileName = 'Tracer Study-' + sekolahDisplay.npsn + '-' + cleanNamaSekolah + '.xls';
+
+                link.setAttribute('download', fileName);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showToast('Berhasil mendownload rekap untuk ' + sekolahDisplay.namaSekolah, 'success');
+                resetTombolDownloadIcon(btn, icon);
+            }, 600);
+        }
+
+        // Mengembalikan ikon tombol download ke ikon download normal setelah proses selesai
+        function resetTombolDownloadIcon(btn, icon) {
+            icon.className = 'fa-solid fa-download text-lg';
+            btn.classList.remove('pointer-events-none', 'opacity-80');
         }
 
         function selectSiswaData() {
