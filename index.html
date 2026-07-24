@@ -81,6 +81,105 @@
             animation: modal-card-pop 0.18s ease-in reverse both;
         }
 
+        /* ===== Loading Overlay Modern (saat memuat data dari Spreadsheet) ===== */
+        #app-loading-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 30%, rgba(99,102,241,0.10), transparent 60%),
+                        rgba(248, 250, 252, 0.92);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            transition: opacity 0.35s ease, visibility 0.35s ease;
+        }
+        #app-loading-overlay.overlay-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        .loader-ring-wrap {
+            position: relative;
+            width: 84px;
+            height: 84px;
+            margin: 0 auto 1.1rem auto;
+        }
+        .loader-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 4px solid transparent;
+            border-top-color: #6366f1;
+            border-right-color: #818cf8;
+            animation: loader-spin 1s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+        }
+        .loader-ring.ring-2 {
+            inset: 10px;
+            border-top-color: transparent;
+            border-right-color: transparent;
+            border-bottom-color: #a78bfa;
+            border-left-color: #c4b5fd;
+            animation: loader-spin-rev 1.4s cubic-bezier(0.5, 0.1, 0.5, 0.9) infinite;
+        }
+        .loader-icon-center {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6366f1;
+            font-size: 1.3rem;
+            animation: loader-pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes loader-spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes loader-spin-rev {
+            to { transform: rotate(-360deg); }
+        }
+        @keyframes loader-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.7; }
+        }
+
+        .loader-text-shimmer {
+            background: linear-gradient(90deg, #64748b 0%, #6366f1 25%, #64748b 50%, #6366f1 75%, #64748b 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: loader-shimmer 2.2s linear infinite;
+        }
+        @keyframes loader-shimmer {
+            to { background-position: -200% center; }
+        }
+
+        .loader-progress-bar {
+            width: 160px;
+            height: 4px;
+            border-radius: 999px;
+            background: #e2e8f0;
+            overflow: hidden;
+            margin: 0.9rem auto 0 auto;
+        }
+        .loader-progress-bar::after {
+            content: '';
+            display: block;
+            height: 100%;
+            width: 40%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #6366f1, #a78bfa);
+            animation: loader-progress-slide 1.3s ease-in-out infinite;
+        }
+        @keyframes loader-progress-slide {
+            0%   { transform: translateX(-100%); }
+            50%  { transform: translateX(120%); }
+            100% { transform: translateX(250%); }
+        }
+
         /* ===== Responsive table -> card di layar HP ===== */
         @media (max-width: 767px) {
             .rtable, .rtable tbody, .rtable tr, .rtable td { display: block; width: 100%; }
@@ -149,6 +248,19 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-200 via-slate-300 to-indigo-200/60 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Loading Overlay Modern: tampil saat memuat/menyinkron data dari Spreadsheet -->
+    <div id="app-loading-overlay">
+        <div class="text-center px-6">
+            <div class="loader-ring-wrap">
+                <div class="loader-ring"></div>
+                <div class="loader-ring ring-2"></div>
+                <div class="loader-icon-center"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+            </div>
+            <p id="app-loading-text" class="text-sm font-bold loader-text-shimmer">Memuat data dari Spreadsheet</p>
+            <div class="loader-progress-bar"></div>
+        </div>
+    </div>
 
     <header class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-violet-600 text-white shadow-md sticky top-0 z-20">
         <div class="max-w-7xl mx-auto px-3 py-3 sm:px-4 sm:py-4 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
@@ -481,7 +593,7 @@
 
     <script>
         // ===== GANTI DENGAN URL DEPLOYMENT WEB APP APPS SCRIPT ANDA =====
-        var API_URL = 'https://script.google.com/macros/s/AKfycbxw4Fdt0CCEbasr_-7TGro9un4myGn6UUzGCG7Ay1PTK200ejyE2-lgjadw681mgVlkRA/exec';
+        var API_URL = 'https://script.google.com/macros/s/AKfycbwCSfSRcs2rRt_0_wnPKknupn3lIC8N8Y56Gog__xH12_vLKcVZTocr3KofHSGIcitRwQ/exec';
 
         // Shim (tiruan) google.script.run supaya kode di bawah tidak perlu
         // diubah. Di balik layar, ini memanggil Web App Apps Script lewat
@@ -664,8 +776,25 @@
             }, 190);
         }
 
+        // Menampilkan/menyembunyikan overlay loading modern
+        var _loadingActiveCount = 0;
+        function showAppLoading(text) {
+            _loadingActiveCount++;
+            var overlay = document.getElementById('app-loading-overlay');
+            var textEl = document.getElementById('app-loading-text');
+            if (text) textEl.textContent = text;
+            overlay.classList.remove('overlay-hidden');
+        }
+        function hideAppLoading() {
+            _loadingActiveCount = Math.max(0, _loadingActiveCount - 1);
+            if (_loadingActiveCount === 0) {
+                document.getElementById('app-loading-overlay').classList.add('overlay-hidden');
+            }
+        }
+
         // Ambil data terbaru dari Google Sheets
         function refreshData(callback) {
+            showAppLoading('Memuat data dari Spreadsheet');
             google.script.run
                 .withSuccessHandler(function (data) {
                     sekolahList = data.sekolah || [];
@@ -681,9 +810,11 @@
                         inputTahun.value = tahunLulusAktif;
                     }
 
+                    hideAppLoading();
                     if (callback) callback();
                 })
                 .withFailureHandler(function (err) {
+                    hideAppLoading();
                     showToast('Gagal memuat data: ' + err.message, 'error');
                 })
                 .getAllData();
@@ -705,7 +836,7 @@
                 tabMurid.className = inactiveCls;
                 secGuru.classList.remove('hidden');
                 secMurid.classList.add('hidden');
-                wrapperDownload.classList.add('hidden'); // tombol excel hanya untuk Akun Murid
+                wrapperDownload.classList.remove('hidden'); // tombol download tetap tampil di halaman Guru/Operator
                 refreshData(renderRekapGuru);
             } else {
                 tabMurid.className = activeClsMurid;
@@ -1090,12 +1221,25 @@
         }
 
         function downloadExcelSekolah() {
+            // Jika sedang berada di halaman Guru/Operator, arahkan dulu ke menu Murid/Ortu,
+            // dan tetap tampilkan dialog modal (bukan sekadar toast) meski halaman berpindah.
+            var sedangDiGuru = !document.getElementById('section-guru').classList.contains('hidden');
+            if (sedangDiGuru) {
+                switchTab('murid');
+                tampilkanModalPeringatan({
+                    title: 'Pilih Sekolah Dulu',
+                    desc: 'Silakan pilih Asal Sekolah terlebih dahulu di menu MURID/ORTU sebelum mendownload rekap Excel.',
+                    icon: 'fa-circle-info'
+                });
+                return;
+            }
+
             var sekolahIdsStr = document.getElementById('murid-select-sekolah').value;
             if (!sekolahIdsStr) {
                 tampilkanModalPeringatan({
                     title: 'Pilih Sekolah Dulu',
-                    desc: 'Silakan pilih Asal Sekolah terlebih di menu MURID/ORTU dahulu sebelum mendownload rekap Excel.',
-                    icon: 'fa-user-graduate'
+                    desc: 'Silakan pilih Asal Sekolah terlebih dahulu di menu MURID/ORTU sebelum mendownload rekap Excel.',
+                    icon: 'fa-circle-info'
                 });
                 return;
             }
