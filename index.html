@@ -378,52 +378,7 @@
                 </div>
             </div>
 
-            <!-- Dashboard Status Konfirmasi Siswa (Belum / Sudah Mengisi) -->
-            <div id="card-status-konfirmasi" class="bg-white rounded-2xl shadow-md border border-rose-200 p-4 sm:p-8">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-                    <h3 class="text-sm sm:text-md font-bold mb-0 flex items-center flex-wrap gap-2">
-                        <span id="judul-status-icon-wrap" class="flex items-center text-rose-700">
-                            <i id="judul-status-icon" class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>
-                            <span id="judul-status-text">Siswa Belum Mengisi Konfirmasi</span>
-                        </span>
-                        <span id="badge-belum-mengisi" class="bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
-                    </h3>
-
-                    <div class="flex bg-slate-100 p-1 rounded-xl shrink-0 self-start sm:self-auto">
-                        <button type="button" onclick="setModeStatusKonfirmasi('belum')" id="btn-mode-belum" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-rose-500 text-white shadow whitespace-nowrap">
-                            <i class="fa-solid fa-hourglass-half mr-1"></i> Belum Mengisi
-                        </button>
-                        <button type="button" onclick="setModeStatusKonfirmasi('sudah')" id="btn-mode-sudah" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-500 hover:text-slate-700 whitespace-nowrap">
-                            <i class="fa-solid fa-circle-check mr-1"></i> Sudah Mengisi
-                        </button>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">
-                        <i class="fa-solid fa-magnifying-glass mr-1"></i> Cari / Filter Sekolah
-                    </label>
-                    <select id="filter-sekolah-belum" onchange="renderBelumMengisi()" class="w-full sm:w-80 px-4 py-2.5 rounded-xl border border-rose-200 bg-rose-50/50 focus:ring-2 focus:ring-rose-400 focus:outline-none text-sm">
-                        <option value="">-- Semua Sekolah --</option>
-                    </select>
-                </div>
-
-                <div class="overflow-x-auto -mx-1 px-1">
-                    <table class="rtable rtable-compact w-full text-left text-xs sm:text-sm text-slate-600">
-                        <thead class="bg-rose-50 text-rose-700 text-xs uppercase tracking-wider font-semibold">
-                            <tr>
-                                <th class="p-2 sm:p-3 rounded-l-lg w-10">No</th>
-                                <th class="p-2 sm:p-3">Nama Siswa</th>
-                                <th class="p-2 sm:p-3 rounded-r-lg">Sekolah</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-belum-mengisi" class="divide-y divide-rose-100">
-                            <tr><td colspan="3" class="text-center py-6 text-slate-400">Memuat data...</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+            </section>
 
         <!-- ==================== MURID SECTION ==================== -->
         <section id="section-murid" class="space-y-4 sm:space-y-6">
@@ -545,6 +500,49 @@
                     </div>
                 </form>
             </div>
+
+            <!-- Dashboard Status Konfirmasi Siswa (Belum / Sudah Mengisi).
+                 Filter sekolah mengikuti dropdown "Pilih Nama Sekolah Asal" di atas.
+                 Jika belum ada sekolah dipilih, seluruh siswa dari semua sekolah ditampilkan. -->
+            <div id="card-status-konfirmasi" class="bg-white rounded-2xl shadow-md border border-rose-200 p-4 sm:p-8">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <h3 class="text-sm sm:text-md font-bold mb-0 flex items-center flex-wrap gap-2">
+                        <span id="judul-status-icon-wrap" class="flex items-center text-rose-700">
+                            <i id="judul-status-icon" class="fa-solid fa-triangle-exclamation text-rose-500 mr-2"></i>
+                            <span id="judul-status-text">Siswa Belum Mengisi Konfirmasi</span>
+                        </span>
+                        <span id="badge-belum-mengisi" class="bg-rose-100 text-rose-700 text-xs font-bold px-2.5 py-1 rounded-full">0</span>
+                    </h3>
+
+                    <div class="flex bg-slate-100 p-1 rounded-xl shrink-0 self-start sm:self-auto">
+                        <button type="button" onclick="setModeStatusKonfirmasi('belum')" id="btn-mode-belum" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-rose-500 text-white shadow whitespace-nowrap">
+                            <i class="fa-solid fa-hourglass-half mr-1"></i> Belum Mengisi
+                        </button>
+                        <button type="button" onclick="setModeStatusKonfirmasi('sudah')" id="btn-mode-sudah" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-500 hover:text-slate-700 whitespace-nowrap">
+                            <i class="fa-solid fa-circle-check mr-1"></i> Sudah Mengisi
+                        </button>
+                    </div>
+                </div>
+
+                <p class="text-xs text-slate-400 mb-4 -mt-1">
+                    <i class="fa-solid fa-filter mr-1"></i> Menampilkan data sesuai sekolah yang dipilih di "Pilih Nama Sekolah Asal" di atas. Jika belum memilih sekolah, seluruh siswa dari semua sekolah ditampilkan.
+                </p>
+
+                <div class="overflow-x-auto -mx-1 px-1">
+                    <table class="rtable rtable-compact w-full text-left text-xs sm:text-sm text-slate-600">
+                        <thead class="bg-rose-50 text-rose-700 text-xs uppercase tracking-wider font-semibold">
+                            <tr>
+                                <th class="p-2 sm:p-3 rounded-l-lg w-10">No</th>
+                                <th class="p-2 sm:p-3">Nama Siswa</th>
+                                <th class="p-2 sm:p-3 rounded-r-lg">Sekolah</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-belum-mengisi" class="divide-y divide-rose-100">
+                            <tr><td colspan="3" class="text-center py-6 text-slate-400">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
 
     </main>
@@ -593,7 +591,7 @@
 
     <script>
         // ===== GANTI DENGAN URL DEPLOYMENT WEB APP APPS SCRIPT ANDA =====
-        var API_URL = 'https://script.google.com/macros/s/AKfycbwCSfSRcs2rRt_0_wnPKknupn3lIC8N8Y56Gog__xH12_vLKcVZTocr3KofHSGIcitRwQ/exec';
+        var API_URL = 'https://script.google.com/macros/s/AKfycbz687mJztHk8phdHN-A-WeyMdOVUx81_wRFhDmccIt2di4ScL3Odpslx_Ox7ihJRABxNQ/exec';
 
         // Shim (tiruan) google.script.run supaya kode di bawah tidak perlu
         // diubah. Di balik layar, ini memanggil Web App Apps Script lewat
@@ -955,30 +953,7 @@
                 });
             }
 
-            populateFilterSekolahBelum();
-            renderBelumMengisi();
-        }
-
-        // Mengisi dropdown filter sekolah pada kartu "Belum Mengisi Konfirmasi".
-        // Menggunakan buildSekolahGroups() yang sama dengan dropdown Akun Murid,
-        // supaya sekolah dengan nama sama tetap digabung jadi satu opsi.
-        // Pilihan yang sedang aktif dipertahankan saat data di-refresh.
-        function populateFilterSekolahBelum() {
-            var select = document.getElementById('filter-sekolah-belum');
-            var currentValue = select.value;
-
-            select.innerHTML = '<option value="">-- Semua Sekolah --</option>';
-            var groups = buildSekolahGroups();
-            groups.forEach(function (g) {
-                var opt = document.createElement('option');
-                opt.value = g.ids.join(',');
-                opt.textContent = g.namaSekolah + ' (NPSN: ' + g.npsn + ')';
-                select.appendChild(opt);
-            });
-
-            var masihAda = [].slice.call(select.options).some(function (o) { return o.value === currentValue; });
-            if (masihAda) select.value = currentValue;
-        }
+            }
 
         // Mode tampilan kartu status konfirmasi: 'belum' atau 'sudah'.
         // Hanya salah satu yang ditampilkan pada satu waktu.
@@ -1013,7 +988,11 @@
             var iconWrap = document.getElementById('judul-status-icon-wrap');
             var icon = document.getElementById('judul-status-icon');
             var teksJudul = document.getElementById('judul-status-text');
-            var filterValue = document.getElementById('filter-sekolah-belum').value;
+
+            // Filter sekolah mengikuti dropdown "Pilih Nama Sekolah Asal" (murid-select-sekolah).
+            // Jika belum dipilih, tampilkan siswa dari semua sekolah.
+            var selectSekolah = document.getElementById('murid-select-sekolah');
+            var filterValue = selectSekolah ? selectSekolah.value : '';
             var filterIds = filterValue ? filterValue.split(',') : null;
             var isBelum = modeStatusKonfirmasi === 'belum';
 
@@ -1175,6 +1154,8 @@
             // Tombol download selalu tampil di Akun Murid/Ortu, warna coklat (belum aktif)
             document.getElementById('wrapper-download-excel').classList.remove('hidden');
             setTombolDownloadAktif(false);
+
+            renderBelumMengisi(); // tampilkan status konfirmasi seluruh siswa (semua sekolah) sejak awal
         }
 
         // Mengatur tampilan tombol download Excel:
@@ -1194,6 +1175,8 @@
             var sekolahIdsStr = document.getElementById('murid-select-sekolah').value;
             var siswaSelect = document.getElementById('murid-select-siswa');
             document.getElementById('form-murid').classList.add('hidden');
+
+            renderBelumMengisi(); // perbarui daftar status konfirmasi sesuai sekolah yang dipilih
 
             if (!sekolahIdsStr) {
                 siswaSelect.innerHTML = '<option value="">-- Pilih Nama Anda --</option>';
@@ -1420,7 +1403,11 @@
                         showToast('Konfirmasi data kelanjutan sekolah berhasil disimpan!', 'success');
                         refreshData(function () {
                             var sekId = document.getElementById('murid-select-sekolah').value;
-                            if (sekId) loadSiswaList();
+                            if (sekId) {
+                                loadSiswaList(); // ini juga otomatis memanggil renderBelumMengisi()
+                            } else {
+                                renderBelumMengisi(); // perbarui daftar status konfirmasi meski sekolah belum dipilih
+                            }
                         });
                     } else {
                         showToast(result.message || 'Terjadi kesalahan.', 'error');
